@@ -3,6 +3,9 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from sklearn.preprocessing import PolynomialFeatures
 from sklearn import linear_model
+from sklearn.model_selection import cross_val_score
+from sklearn.model_selection import KFold
+from sklearn.metrics import mean_squared_error
 
 JAN = 0
 FEB = 31
@@ -29,7 +32,6 @@ df = pd.read_csv("jan-dec-2019-cycle-data.csv", comment='#')
 #identifies null columns
 #print(df[df.iloc[:,1].isnull()])
 #print(df.iloc[2130:2140,1].isnull())
-#print(df.iloc[2130:2140,1])
 
 GroveRoad = np.array(df.iloc[:,1])
 
@@ -42,47 +44,47 @@ GroveRoadByDay = np.array_split(GroveRoad, numDays)
 peaks = []
 for i in range(0, numDays):
     peaks.append(max(GroveRoadByDay[i]))
+peaks = np.array(peaks).reshape(-1,1)
 
 #getting min of each day
 mins = []
 for i in range(0, numDays):
     mins.append(min(GroveRoadByDay[i]))
+mins = np.array(mins).reshape(-1,1)
 
 #getting average of each day
 averages = []
 for i in range(0, numDays):
     averages.append(sum(GroveRoadByDay[i])/len(GroveRoadByDay[i]))
+averages = np.array(averages).reshape(-1,1)
 
 #print(numDays, peaks)
-days = list(range(0, numDays))
-hour = list(range(0,24))
+days = np.array(list(range(0, numDays))).reshape(-1,1)
+hour = np.array(list(range(0,24))).reshape(-1,1)
 
 ############################# CHARTING ##################################
 
 plt.rc('font', size=18)
 plt.rcParams['figure.constrained_layout.use'] = True
 
-def plotDayPeaksInPeriod(start, end, title):
-    for i in range (start, end):
-        plt.scatter(days[i], peaks[i])
+def plotDayPeaks(daysSub, peaksSub, title):
+    plt.scatter(daysSub, peaksSub)
     plt.xlabel("Hour"); plt.ylabel("Cyclists")
-    plt.legend(['Total'])
+    plt.legend(['Day Peaks'])
     plt.title(f"{title} cycle volume 2019")
     plt.show()
     
-def plotDayMinsInPeriod(start, end, title):
-    for i in range (start, end):
-        plt.scatter(days[i], mins[i])
+def plotDayMins(daysSub, minsSub, title):
+    plt.scatter(daysSub, minsSub)
     plt.xlabel("Hour"); plt.ylabel("Cyclists")
-    plt.legend(['Total'])
+    plt.legend(['Day Mins'])
     plt.title(f"{title} cycle volume 2019")
     plt.show()
 
-def plotDayAveragesInPeriod(start, end, title):
-    for i in range (start, end):
-        plt.scatter(days[i], averages[i])
+def plotDayAverages(daysSub, averagesSub, title):
+    plt.scatter(daysSub, averagesSub)
     plt.xlabel("Hour"); plt.ylabel("Cyclists")
-    plt.legend(['Total'])
+    plt.legend(['Day Averages'])
     plt.title(f"{title} cycle volume 2019")
     plt.show()
 
@@ -96,19 +98,19 @@ def plotPeriodVolumeInDay(start, end, title):
     plt.show()
 
 ################################## REGRESSION #################################
-
+'''
 C = 1
-peaks = np.array(peaks).reshape(1, -1)
-days = np.array(days).reshape(1, -1)
+peaks = np.array(peaks).reshape(-1,1)
+days = np.array(days).reshape(-1,1)
 
 #print(peaks, days)
 
 a = 1/(2*C)
-clf = linear_model.Lasso(alpha=a)
-clf.fit(days, peaks)
-cyclistPred = clf.predict(days)
+model = linear_model.Lasso(alpha=a)
+model.fit(days, peaks)
+yPred = model.predict(days)
 
-plt.scatter(days, cyclistPred)
+plt.scatter(days, yPred)
 plt.xlabel("Hour"); plt.ylabel("Cyclists")
 plt.legend(['Total'])
 plt.title("lasso regression 2019")
@@ -117,66 +119,32 @@ plt.show()
 ############################### EVALUATION #####################################
 
 
+mean_error=[]; std_error=[]
+f = 5
+C_range = [1]
 
+for C in C_range:
+    a = 1/(2*C)
+    model = linear_model.Lasso(alpha=a)
+    temp = []
+    
+    kf = KFold(n_splits=f)
+    for train, test in kf.split(days):
+        model.fit(days[train], peaks[train])
+        print(days[train], peaks[train], days[test])
+        ypred = model.predict(days[test])
+        print("intercept ", model.intercept_, "slope ", model.coef_, " square error ", mean_squared_error(peaks[test], ypred))
+        temp.append(mean_squared_error(peaks[test], ypred))
+    mean_error.append(np.array(temp).mean())
+    std_error.append(np.array(temp).std())
+
+plt.errorbar(C_range, mean_error, yerr=std_error)
+plt.xlabel('C'); plt.ylabel('Mean square error')
+plt.title('Lasso Regression 10-fold')
+plt.show()
 
 '''
-#plot day peaks by year and months
-plotDayPeaksInPeriod(0, numDays, "Full Year")
-plotDayPeaksInPeriod(JAN, FEB, "January")
-plotDayPeaksInPeriod(FEB, MAR, "Feburary")
-plotDayPeaksInPeriod(MAR, APR, "March")
-plotDayPeaksInPeriod(APR, MAY, "April")
-plotDayPeaksInPeriod(MAY, JUN, "May")
-plotDayPeaksInPeriod(JUN, JUL, "June")
-plotDayPeaksInPeriod(JUL, AUG, "July")
-plotDayPeaksInPeriod(AUG, SEP, "August")
-plotDayPeaksInPeriod(SEP, OCT, "September")
-plotDayPeaksInPeriod(OCT, NOV, "October")
-plotDayPeaksInPeriod(NOV, DEC, "November")
-plotDayPeaksInPeriod(DEC, END, "December")
 
-#plot day peaks by year and months
-plotDayMinsInPeriod(0, numDays, "Full Year")
-plotDayMinsInPeriod(JAN, FEB, "January")
-plotDayMinsInPeriod(FEB, MAR, "Feburary")
-plotDayMinsInPeriod(MAR, APR, "March")
-plotDayMinsInPeriod(APR, MAY, "April")
-plotDayMinsInPeriod(MAY, JUN, "May")
-plotDayMinsInPeriod(JUN, JUL, "June")
-plotDayMinsInPeriod(JUL, AUG, "July")
-plotDayMinsInPeriod(AUG, SEP, "August")
-plotDayMinsInPeriod(SEP, OCT, "September")
-plotDayMinsInPeriod(OCT, NOV, "October")
-plotDayMinsInPeriod(NOV, DEC, "November")
-plotDayMinsInPeriod(DEC, END, "December")
+plotDayPeaks(days[JAN:FEB], peaks[JAN:FEB], "January")
+plotDayAverages(days[MAR:APR], averages[MAR:APR], "March")
 
-#plot day averages by year and months
-plotDayAveragesInPeriod(0, numDays, "Full Year")
-plotDayAveragesInPeriod(JAN, FEB, "January")
-plotDayAveragesInPeriod(FEB, MAR, "Feburary")
-plotDayAveragesInPeriod(MAR, APR, "March")
-plotDayAveragesInPeriod(APR, MAY, "April")
-plotDayAveragesInPeriod(MAY, JUN, "May")
-plotDayAveragesInPeriod(JUN, JUL, "June")
-plotDayAveragesInPeriod(JUL, AUG, "July")
-plotDayAveragesInPeriod(AUG, SEP, "August")
-plotDayAveragesInPeriod(SEP, OCT, "September")
-plotDayAveragesInPeriod(OCT, NOV, "October")
-plotDayAveragesInPeriod(NOV, DEC, "November")
-plotDayAveragesInPeriod(DEC, END, "December")
-
-#plot period volume per day
-plotPeriodVolumeInDay(0, numDays, "Full Year")
-plotPeriodVolumeInDay(JAN, FEB, "January")
-plotPeriodVolumeInDay(FEB, MAR, "Feburary")
-plotPeriodVolumeInDay(MAR, APR, "March")
-plotPeriodVolumeInDay(APR, MAY, "April")
-plotPeriodVolumeInDay(MAY, JUN, "May")
-plotPeriodVolumeInDay(JUN, JUL, "June")
-plotPeriodVolumeInDay(JUL, AUG, "July")
-plotPeriodVolumeInDay(AUG, SEP, "August")
-plotPeriodVolumeInDay(SEP, OCT, "September")
-plotPeriodVolumeInDay(OCT, NOV, "October")
-plotPeriodVolumeInDay(NOV, DEC, "November")
-plotPeriodVolumeInDay(DEC, END, "December")
-'''
