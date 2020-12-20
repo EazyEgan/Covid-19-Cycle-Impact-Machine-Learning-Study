@@ -37,32 +37,40 @@ GroveRoad = np.array(df.iloc[:,1])
 
 dataLen = len(GroveRoad)
 numDays = int(dataLen/24)
+
+#print(numDays, peaks)
+days = np.array(list(range(0, numDays))).reshape(-1,1)
+hours = np.array(list(range(0,24))).reshape(-1,1)
+
 #print(dataLen, numDays, dataLen%numDays)
-GroveRoadByDay = np.array_split(GroveRoad, numDays)
+hoursGroupedByDay = np.array_split(GroveRoad, numDays)
+
+#print("grove road = ", groveRoadByDay[1], "hoursGrouped = " ,hoursGroupedByDay[1])
 
 #getting peak of each day
 peaks = []
 for i in range(0, numDays):
-    peaks.append(max(GroveRoadByDay[i]))
+    peaks.append(max(hoursGroupedByDay[i]))
 peaks = np.array(peaks).reshape(-1,1)
 
 #getting min of each day
 mins = []
 for i in range(0, numDays):
-    mins.append(min(GroveRoadByDay[i]))
+    mins.append(min(hoursGroupedByDay[i]))
 mins = np.array(mins).reshape(-1,1)
 
 #getting average of each day
 averages = []
 for i in range(0, numDays):
-    averages.append(sum(GroveRoadByDay[i])/len(GroveRoadByDay[i]))
+    averages.append(sum(hoursGroupedByDay[i])/len(hoursGroupedByDay[i]))
 averages = np.array(averages).reshape(-1,1)
 
-#print(numDays, peaks)
-days = np.array(list(range(0, numDays))).reshape(-1,1)
-hour = np.array(list(range(0,24))).reshape(-1,1)
+#reshaping hoursGroupedByDay after above functions to avoid nesting reshaping
+for i in range (0, len(hours)):
+    hoursGroupedByDay[i] = hoursGroupedByDay[i].reshape(-1,1)
 
-############################# CHARTING ##################################
+
+############################# PLOTTING ##################################
 
 plt.rc('font', size=18)
 plt.rcParams['figure.constrained_layout.use'] = True
@@ -88,29 +96,32 @@ def plotDayAverages(daysSub, averagesSub, title):
     plt.title(f"{title} cycle volume 2019")
     plt.show()
 
-def plotPeriodVolumeInDay(start, end, title):
-    for i in range (start, end):
-        #print(i, len(hour), len(GroveRoadByDay[i]))
-        plt.plot(hour, GroveRoadByDay[i])
+def plotHourlyTraffic(hoursGroupedSub, title):
+    for i in range (0, len(hours)):
+        plt.plot(hours, hoursGroupedSub[i])
     plt.xlabel("Hour"); plt.ylabel("Cyclists")
     plt.legend(['Total'])
     plt.title(f"{title} cycle volume 2019")
     plt.show()
 
 ################################## REGRESSION #################################
-'''
-C = 1
-peaks = np.array(peaks).reshape(-1,1)
-days = np.array(days).reshape(-1,1)
 
-#print(peaks, days)
+C = 0.0001
+
+poly = PolynomialFeatures(6)
+polyDays = poly.fit_transform(days)
+
+print(polyDays)
 
 a = 1/(2*C)
 model = linear_model.Lasso(alpha=a)
-model.fit(days, peaks)
-yPred = model.predict(days)
+model.fit(polyDays, mins)
+yPred = model.predict(polyDays)
 
-plt.scatter(days, yPred)
+#print("days", days, "peaks", peaks, "yPred", yPred)
+
+plt.scatter(days, mins, color="blue")
+plt.plot(days, yPred, color="red")
 plt.xlabel("Hour"); plt.ylabel("Cyclists")
 plt.legend(['Total'])
 plt.title("lasso regression 2019")
@@ -118,7 +129,7 @@ plt.show()
 
 ############################### EVALUATION #####################################
 
-
+'''
 mean_error=[]; std_error=[]
 f = 5
 C_range = [1]
@@ -143,8 +154,11 @@ plt.xlabel('C'); plt.ylabel('Mean square error')
 plt.title('Lasso Regression 10-fold')
 plt.show()
 
-'''
 
+#plotDay*something* template(days[day_range], peaks[day_range], title)
 plotDayPeaks(days[JAN:FEB], peaks[JAN:FEB], "January")
 plotDayAverages(days[MAR:APR], averages[MAR:APR], "March")
 
+#plotHourlyTraffic(hoursGroupedByDay[day_range], title)
+plotHourlyTraffic(hoursGroupedByDay[NOV:DEC], "November")
+'''
