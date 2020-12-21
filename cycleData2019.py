@@ -198,3 +198,77 @@ print(start, end, weekEndPeaks[start:end])
 #plotHourlyTraffic(hoursGroupedByDay[day_range], title)
 plotHourlyTraffic(hoursGroupedByDay[NOV:DEC], "November")
 
+
+
+############################### KNN CLASSIFIER #################################
+
+#######CURRENTLY OVERFIT - HAVE TO CHANGE NEIGHBOURS
+
+
+start, end = getWeekEndCountBetweenMonths(1, 12)
+Xtrain = days[start:end]
+
+ytrain = weekEndPeaks[start:end]
+
+#WEEKENDS AND WEEKDAYS - WILL MAKE INTO FUCNTION TO PASS WEEKENDS OR WEEKDAYS
+for i in [1,2]:
+
+
+    from sklearn.neighbors import KNeighborsClassifier
+    model = KNeighborsClassifier(n_neighbors=5,weights='uniform').fit(Xtrain, ytrain)
+    Xtest = Xtrain
+
+    ypred = model.predict(Xtrain)
+    import matplotlib.pyplot as plt
+    plt.rc('font', size=18); plt.rcParams['figure.constrained_layout.use'] = True
+    plt.scatter(Xtrain, ytrain, color='red', marker='+')
+    plt.plot(Xtest, ypred, color='green')
+    plt.xlabel("input x"); plt.ylabel("output y")
+    plt.legend(["predict","train"])
+    plt.show()
+
+    ############################ KNN REGRESSION ####################################
+    import numpy as np
+    m = 25
+
+    from sklearn.neighbors import KNeighborsRegressor
+    model = KNeighborsRegressor(n_neighbors=3,weights='uniform').fit(Xtrain, ytrain)
+
+    ypred = model.predict(Xtest)
+    import matplotlib.pyplot as plt
+    plt.rc('font', size=18); plt.rcParams['figure.constrained_layout.use'] = True
+    plt.scatter(Xtrain, ytrain, color='red', marker='+')
+    plt.plot(Xtest, ypred, color='green')
+    plt.xlabel("input x"); plt.ylabel("output y"); plt.legend(["predict","train"])
+    plt.show()
+
+    def gaussian_kernel100(distances):
+        weights = np.exp(-100*(distances**2))
+        return weights/np.sum(weights)
+
+    def gaussian_kernel1000(distances):
+        weights = np.exp(-1000*(distances**2))
+        return weights/np.sum(weights)
+    def gaussian_kernel10000(distances):
+        weights = np.exp(-10000*(distances**2))
+        return weights/np.sum(weights)
+
+    model2 = KNeighborsRegressor(n_neighbors=3,weights=gaussian_kernel100).fit(Xtrain, ytrain)
+    ypred2 = model2.predict(Xtest)
+
+    model3 = KNeighborsRegressor(n_neighbors=3,weights=gaussian_kernel1000).fit(Xtrain, ytrain)
+    ypred3 = model3.predict(Xtest)
+
+    model4 = KNeighborsRegressor(n_neighbors=3,weights=gaussian_kernel10000).fit(Xtrain, ytrain)
+    ypred4 = model4.predict(Xtest)
+
+    plt.scatter(Xtrain, ytrain, color='red', marker='+')
+    plt.plot(Xtest, ypred2, color='blue')
+    plt.plot(Xtest, ypred3, color='orange')
+    plt.plot(Xtest, ypred4, color='green')
+    plt.xlabel("input x"); plt.ylabel("output y")
+    plt.legend(["k=7,sigma=100","k=7,sigma=1000","k=7,sigma=10000","train"])
+    plt.show()
+    start, end = getWeekDayCountBetweenMonths(1, 12)
+    Xtrain = days[start:end]
+    ytrain = weekDayPeaks[start:end]
