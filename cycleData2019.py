@@ -310,7 +310,7 @@ def kNN(Xtrain, ytrain):#, xtest):
     plt.show()
     """
 
-    Xtest = xtest
+    Xtest = Xtrain #xtest
 
     model = KNeighborsRegressor(n_neighbors=7, weights='uniform').fit(Xtrain, ytrain) #ANything on or above is weekday
     ypred = model.predict(Xtest)
@@ -321,7 +321,7 @@ def kNN(Xtrain, ytrain):#, xtest):
     X = weekDays[start:end]
     y = weekDayPeaks[start:end]
     X, y = normalize(X, y)
-    plt.scatter(X, y, color='blue', marker='o')
+    #plt.scatter(X, y, color='blue', marker='o')
     plt.scatter(Xtrain, ytrain, color='red', marker='+')
 
     plt.plot(Xtest, ypred, color='green')
@@ -435,8 +435,8 @@ weekEnds = np.array(list(range(0, numWeekEnds))).reshape(-1, 1)
 # plotHourlyTraffic(hoursGroupedByDay[NOV:DEC], "November")
 
 start, end = getWeekDayCountBetweenMonths(1, 12)
-X = days
-y = peaks
+X = days #weekDays[start:end]
+y = peaks #weekDayPeaks[start:end]
 X, y = normalize(X, y)
 print(X, y)
 """ Test data augmentation
