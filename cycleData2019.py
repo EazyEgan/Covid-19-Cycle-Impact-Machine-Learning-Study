@@ -163,6 +163,10 @@ def ridgeRegression(X, y, c, poly):
     a = 1/(2*C)
     model = Ridge(alpha=a)
     model.fit(polyX, y)
+
+    #Xtest=np.linspace(0,2,num=700).reshape(-1, 1)
+    #polyX = poly.fit_transform(Xtest)
+    
     yPred = model.predict(polyX)
 
     plt.scatter(X, y, color="blue")
@@ -245,7 +249,7 @@ def kNN(Xtrain, ytrain):
 
 ############################### DUMMY REGRESSION ##############################
 def dummy_regressor(X, y):
-    model = DummyRegressor(strategy="constant", constant=0.5)
+    model = DummyRegressor(strategy="constant", constant=0.2)
     model.fit(X, y)
     yPred = model.predict(X)
     print(model.score(X, y))
@@ -258,7 +262,7 @@ def dummy_regressor(X, y):
 
 ############################### EVALUATION #####################################
 
-def cross_validation(X, y, poly):
+def cross_validation(X, y, poly, model):
     mean_error=[]; std_error=[]
     f = 5
     C_range = [0.001, 0.01, 1, 100, 1000]
@@ -268,7 +272,12 @@ def cross_validation(X, y, poly):
 
     for C in C_range:
         a = 1/(2*C)
-        model = linear_model.Lasso(alpha=a)
+        
+        if(model == "lasso"): model = linear_model.Lasso(alpha=a)
+        elif(model == "ridge"): model = Ridge(alpha=a)
+        elif(model == "kNN"): model = KNeighborsRegressor(n_neighbors=3,weights='uniform')
+        else: model = DummyRegressor(strategy="constant", constant=0.5)
+        
         temp = []
         
         kf = KFold(n_splits=f)
@@ -276,11 +285,11 @@ def cross_validation(X, y, poly):
             model.fit(polyX[train], y[train])
             ypred = model.predict(polyX[test])
             #print("intercept ", model.intercept_, "slope ", model.coef_, " square error ", mean_squared_error(polyX[test], ypred))
-            temp.append(mean_squared_error(peaks[test], ypred))
+            temp.append(mean_squared_error(y[test], ypred))
         mean_error.append(np.array(temp).mean())
         std_error.append(np.array(temp).std())
 
-        scores = cross_val_score(linear_model.Lasso(), polyX, y, cv=5, scoring='neg_mean_squared_error')
+        scores = cross_val_score(model, polyX, y, cv=5, scoring='neg_mean_squared_error')
         print(scores)
         print("Accuracy: %0.2f (+/− %0.2f)" % (scores.mean(), scores.std()))
 
@@ -313,18 +322,18 @@ weekEnds = np.array(list(range(0, numWeekEnds))).reshape(-1,1)
 ##plotHourlyTraffic(hoursGroupedByDay[day_range], title)
 #plotHourlyTraffic(hoursGroupedByDay[NOV:DEC], "November")
 
+
 start, end = getWeekDayCountBetweenMonths(1,12)
 X = weekDays[start:end]
 y = weekDayPeaks[start:end]
 X, y = normalize(X,y)
-print(X, y)
+Xtest=np.linspace(-3,3,num=1000).reshape(-1, 1)
 
-lassoRegression(X, y, 0.0001, 2)
-ridgeRegression(X, y, 0.0001, 2)
+lassoRegression(X, y, 1000, 4)
+ridgeRegression(X, y, 1000, 4)
 kNN(X, y)
 dummy_regressor(X, y)
-cross_validation(X, y, 2)
-
+cross_validation(X, y, 2, "dummy")
 
 
 
