@@ -8,6 +8,8 @@ from sklearn.model_selection import cross_val_score
 from sklearn.model_selection import KFold
 from sklearn.metrics import mean_squared_error
 from sklearn.preprocessing import MinMaxScaler
+from sklearn.neighbors import KNeighborsRegressor
+from sklearn.dummy import DummyRegressor
 
 #start of each month
 JAN = 0; FEB = 31; MAR = 59; APR = 90; MAY = 120; JUN = 151; JUL = 181
@@ -169,16 +171,13 @@ def ridgeRegression(X, y, c, poly):
     plt.title("Ridge Regression 2019")
     plt.show()
 
-############################### KNN CLASSIFIER #################################
 
-#######CURRENTLY OVERFIT - HAVE TO CHANGE NEIGHBOURS
+############################ KNN REGRESSION ####################################
+#CURRENTLY OVERFIT - HAVE TO CHANGE NEIGHBOURS
+def kNN(Xtrain, ytrain):
 
-
-#start, end = getWeekEndCountBetweenMonths(1, 12)
-#Xtrain = days[start:end]
-#ytrain = weekEndPeaks[start:end]
-
-def kNN(startMonth, endMonth, dayType):
+    '''
+    ############################### KNN CLASSIFIER #################################
     if(dayType.lower() == "weekend"):
         start, end = getWeekEndCountBetweenMonths(startMonth, endMonth)
         Xtrain = days[start:end]
@@ -203,16 +202,13 @@ def kNN(startMonth, endMonth, dayType):
     plt.xlabel("input x"); plt.ylabel("output y")
     plt.legend(["predict","train"])
     plt.show()
+    '''
 
-    ############################ KNN REGRESSION ####################################
-    import numpy as np
-    m = 25
+    Xtest = Xtrain
 
-    from sklearn.neighbors import KNeighborsRegressor
     model = KNeighborsRegressor(n_neighbors=3,weights='uniform').fit(Xtrain, ytrain)
-
     ypred = model.predict(Xtest)
-    import matplotlib.pyplot as plt
+
     plt.rc('font', size=18); plt.rcParams['figure.constrained_layout.use'] = True
     plt.scatter(Xtrain, ytrain, color='red', marker='+')
     plt.plot(Xtest, ypred, color='green')
@@ -247,6 +243,18 @@ def kNN(startMonth, endMonth, dayType):
     plt.legend(["k=7,sigma=100","k=7,sigma=1000","k=7,sigma=10000","train"])
     plt.show()
 
+############################### DUMMY REGRESSION ##############################
+def dummy_regressor(X, y):
+    model = DummyRegressor(strategy="constant", constant=0.5)
+    model.fit(X, y)
+    yPred = model.predict(X)
+    print(model.score(X, y))
+
+    plt.scatter(X, y, color="blue")
+    plt.plot(X, yPred, color="red")
+    plt.xlabel("Days"); plt.ylabel("Cyclists")
+    plt.title("Dummy Regression 2019")
+    plt.show()
 
 ############################### EVALUATION #####################################
 
@@ -313,6 +321,8 @@ print(X, y)
 
 lassoRegression(X, y, 0.0001, 2)
 ridgeRegression(X, y, 0.0001, 2)
+kNN(X, y)
+dummy_regressor(X, y)
 cross_validation(X, y, 2)
 
 
