@@ -210,10 +210,19 @@ Xtrain = days[start:end]
 
 ytrain = weekEndPeaks[start:end]
 
-#WEEKENDS AND WEEKDAYS - WILL MAKE INTO FUCNTION TO PASS WEEKENDS OR WEEKDAYS
-for i in [1,2]:
+def kNN(startMonth, endMonth, dayType):
+    if(dayType.lower() == "weekend"):
+        start, end = getWeekEndCountBetweenMonths(startMonth, endMonth)
+        Xtrain = days[start:end]
 
+        ytrain = weekEndPeaks[start:end]
 
+    elif (dayType.lower=="weekday"):
+
+        start, end = getWeekDayCountBetweenMonths(1, 12)
+        Xtrain = days[start:end]
+        ytrain = weekDayPeaks[start:end]
+        
     from sklearn.neighbors import KNeighborsClassifier
     model = KNeighborsClassifier(n_neighbors=5,weights='uniform').fit(Xtrain, ytrain)
     Xtest = Xtrain
@@ -269,6 +278,3 @@ for i in [1,2]:
     plt.xlabel("input x"); plt.ylabel("output y")
     plt.legend(["k=7,sigma=100","k=7,sigma=1000","k=7,sigma=10000","train"])
     plt.show()
-    start, end = getWeekDayCountBetweenMonths(1, 12)
-    Xtrain = days[start:end]
-    ytrain = weekDayPeaks[start:end]
