@@ -57,9 +57,9 @@ peaks2 = []
 for i in range(0, numDays2):
     peaks2.append(max(hoursGroupedByDay2[i]))
 peaks2 = np.array(peaks2).reshape(-1, 1)
+########2020#########
 
-
-
+########2019#########
 df = pd.read_csv("jan-dec-2019-cycle-data.csv", comment='#')
 
 ################################### SET UP ####################################
@@ -332,17 +332,25 @@ def kNN(Xtrain, ytrain):#, xtest):
 
     Xtest = Xtrain #xtest
 
+
+###### WEEKEDAYS ########
     model = KNeighborsRegressor(n_neighbors=7, weights='uniform').fit(Xtrain, ytrain) #ANything on or above is weekday
     ypred = model.predict(Xtest)
 
     plt.rc('font', size=18);
     plt.rcParams['figure.constrained_layout.use'] = True
-    #start, end = getWeekDayCountBetweenMonths(1, 12)
-    #X = weekDays[start:end]
-    #y = weekDayPeaks[start:end]
-   # X, y = normalize(days2, peaks2)
+#### 2019 ####
+    plt.scatter(Xtrain,ytrain, color='red', marker='+')
 
-    plt.scatter(X,y, color='red', marker='+')
+    plt.plot(Xtest, ypred, color='green')
+    plt.xlabel("input x")
+    plt.ylabel("output y")
+    plt.legend(["predict", "train"])
+    plt.show()
+
+#### 2020 ####
+    X2, y2 = days2, peaks2
+    plt.scatter(X2,y2, color='red', marker='+')
 
     plt.plot(Xtest, ypred, color='green')
     plt.xlabel("input x");
@@ -350,11 +358,27 @@ def kNN(Xtrain, ytrain):#, xtest):
     plt.legend(["predict", "train"])
     plt.show()
 
-
-
+##### WEEKENDS ##### MODEL MUST BE TRAINED ON WEEKEND DATA THAT HASNT BEEN EXTRACTED FROM THE DATASET BECAUSE IT TREATS THEM AS BEING SEQUENTIAL
+    #OR MAYBE WE CAN JUST STRETCH IT OUT BECAUSE IT MIGHT BE THE SAME? NOT ENTIRELY SURE PLUS IT'S 5:11 AM AND I HAVE BEEN AWAKE FAR TOO LONG
+    start, end = getWeekEndCountBetweenMonths(1, 12)
+    X = weekEnds[start:end]
+    y = weekEndPeaks[start:end]
+    #X, y = normalize(days2, peaks2)
+    model = KNeighborsRegressor(n_neighbors=7, weights='uniform').fit(X, y)  # ANything on or above is weekday
+    ypred = model.predict(X)
+    #### 2019 ####
     plt.scatter(Xtrain, ytrain, color='red', marker='+')
 
-    plt.plot(Xtest, ypred, color='green')
+    plt.plot(X, ypred, color='green')
+    plt.xlabel("input x");
+    plt.ylabel("output y");
+    plt.legend(["predict", "train"])
+    plt.show()
+
+    #### 2020 ####
+    plt.scatter(X2, y2, color='red', marker='+')
+
+    plt.plot(X, ypred, color='green')
     plt.xlabel("input x");
     plt.ylabel("output y");
     plt.legend(["predict", "train"])
@@ -470,8 +494,8 @@ y = peaks #weekDayPeaks[start:end]
 #X, y = normalize(X, y)
 
 start, end = getWeekEndCountBetweenMonths(1, 12)
-X2 = weekEnds[start:end]
-y2 = weekEndPeaks[start:end]
+Xwknd = weekEnds[start:end]
+ywknd = weekEndPeaks[start:end]
 #X2, y2 = normalize(X2, y2)
 
 #Test data augmentation
@@ -484,7 +508,7 @@ Xtest = np.array(Xtest)
 """
 lassoRegression(X, y, 0.0001, 2)
 ridgeRegression(X, y, 0.0001, 2)
-kNN(X2, y2)#,Xtest)
-#kNN(X2, y2)#,Xtest)
+kNN(X, y)#,Xtest) #Xwknd, ywknd is weekends only
+#kNN(X, y)#,Xtest) #X,y is all days and all peaks
 dummy_regressor(X, y)
 cross_validation(X, y, 2)
