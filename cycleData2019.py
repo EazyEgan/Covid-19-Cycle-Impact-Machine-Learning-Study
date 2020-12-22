@@ -138,20 +138,22 @@ def plotHourlyTraffic(y, title):
 ################################## LASSO REGRESSION #################################
 
 
-def lassoRegression(X, y, c, poly):
-    C = c
+def lassoRegression(X, y, c_list, poly, xlabel):
 
     poly = PolynomialFeatures(poly)
     polyX = poly.fit_transform(X)
 
-    a = 1 / (2 * C)
-    model = linear_model.Lasso(alpha=a)
-    model.fit(polyX, y)
-    yPred = model.predict(polyX)
+    for C in c_list:
 
-    plt.scatter(X, y, color="blue")
-    plt.plot(X, yPred, color="red")
-    plt.xlabel("Days")
+        a = 1 / (2 * C)
+        model = linear_model.Lasso(alpha=a)
+        model.fit(polyX, y)
+        yPred = model.predict(polyX)
+
+        plt.plot(X, yPred, label=f"C:{C}")
+    plt.scatter(X, y, marker=".")
+    plt.xlabel(xlabel)
+    plt.legend()
     plt.ylabel("Cyclists")
     plt.title("lasso Regression 2019")
     plt.show()
@@ -159,20 +161,22 @@ def lassoRegression(X, y, c, poly):
 
 ################################## RIDGE REGRESSION #################################
 
-def ridgeRegression(X, y, c, poly):
-    C = c
-
+def ridgeRegression(X, y, c_list, poly, xlabel):
+    
     poly = PolynomialFeatures(poly)
     polyX = poly.fit_transform(X)
 
-    a = 1 / (2 * C)
-    model = Ridge(alpha=a)
-    model.fit(polyX, y)
-    yPred = model.predict(polyX)
+    for C in c_list:
 
-    plt.scatter(X, y, color="blue")
-    plt.plot(X, yPred, color="red")
-    plt.xlabel("Days")
+        a = 1 / (2 * C)
+        model = Ridge(alpha=a)
+        model.fit(polyX, y)
+        yPred = model.predict(polyX)
+
+        plt.plot(X, yPred, label=f"C:{C}")
+    plt.scatter(X, y, marker=".")
+    plt.xlabel(xlabel)
+    plt.legend()
     plt.ylabel("Cyclists")
     plt.title("Ridge Regression 2019")
     plt.show()
@@ -303,9 +307,9 @@ def kNN(Xtrain, ytrain):
     plt.rc('font', size=18)
     plt.rcParams['figure.constrained_layout.use'] = True
 #### 2019 ####
-    plt.scatter(Xtrain,ytrain, color='red', marker='+')
+    plt.scatter(Xtrain,ytrain, marker="." )
 
-    plt.plot(Xtest, ypred, color='green')
+    plt.plot(Xtest, ypred, color='darkorange')
     plt.xlabel("input x")
     plt.ylabel("output y")
     plt.legend(["predict", "train"])
@@ -313,9 +317,9 @@ def kNN(Xtrain, ytrain):
 
 #### 2020 ####
     X2, y2 = days2, peaks2
-    plt.scatter(X2,y2, color='red', marker='+')
+    plt.scatter(X2,y2, marker=".")
 
-    plt.plot(Xtest, ypred, color='green')
+    plt.plot(Xtest, ypred, color='darkorange')
     plt.xlabel("input x")
     plt.ylabel("output y")
     plt.legend(["predict", "train"])
@@ -362,9 +366,9 @@ def kernelizedKNN(Xtrain, ytrain):
     model4 = KNeighborsRegressor(n_neighbors=7, weights=gaussian_kernel10000).fit(Xtrain, ytrain)
     ypred4 = model4.predict(Xtest)
 
-    plt.scatter(Xtrain, ytrain, color='red', marker='+')
-    plt.plot(Xtest, ypred2, color='blue')
-    plt.plot(Xtest, ypred3, color='orange')
+    plt.scatter(Xtrain, ytrain, marker=".")
+    plt.plot(Xtest, ypred2, color='purple')
+    plt.plot(Xtest, ypred3, color='darkorange')
     plt.plot(Xtest, ypred4, color='green')
     plt.xlabel("input x")
     plt.ylabel("output y")
@@ -379,8 +383,8 @@ def dummy_regressor(X, y):
     yPred = model.predict(X)
     print(model.score(X, y))
 
-    plt.scatter(X, y, color="blue")
-    plt.plot(X, yPred, color="red")
+    plt.scatter(X, y, marker=".")
+    plt.plot(X, yPred, color="darkorange")
     plt.xlabel("Days")
     plt.ylabel("Cyclists")
     plt.title("Dummy Regression 2019")
@@ -389,11 +393,11 @@ def dummy_regressor(X, y):
 
 ############################### EVALUATION #####################################
 
-def cross_validation(X, y, poly, model):
+def cross_validation(X, y, c_list, poly, algorithm):
     mean_error = []
     std_error = []
     f = 5
-    C_range = [0.001, 0.01, 1, 100, 1000]
+    C_range = c_list
 
     poly = PolynomialFeatures(poly)
     polyX = poly.fit_transform(X)
@@ -401,12 +405,11 @@ def cross_validation(X, y, poly, model):
     for C in C_range:
         a = 1 / (2 * C)
 
-        if(model == "lasso"): model = linear_model.Lasso(alpha=a)
-        elif(model == "ridge"): model = Ridge(alpha=a)
-        elif(model == "kNN"): model =  KNeighborsRegressor(n_neighbors=7, weights='uniform')
+        if(algorithm == "lasso"): model = linear_model.Lasso(alpha=a)
+        elif(algorithm == "ridge"): model = Ridge(alpha=a)
+        elif(algorithm == "kNN"): model =  KNeighborsRegressor(n_neighbors=7, weights='uniform')
         else: model = DummyRegressor(strategy="constant", constant=0.5)
 
-        model = linear_model.Lasso(alpha=a)
         temp = []
 
         kf = KFold(n_splits=f)
@@ -425,7 +428,7 @@ def cross_validation(X, y, poly, model):
     plt.errorbar(C_range, mean_error, yerr=std_error)
     plt.xlabel('C')
     plt.ylabel('Mean square error')
-    plt.title('Lasso Regression 5-fold')
+    plt.title(f'{algorithm} Regression 5-fold')
     plt.show()
 
 
@@ -488,12 +491,14 @@ peaks2 = np.array(peaks2).reshape(-1, 1)
 
 
 ################################ main sequence ###################################
+'''
 #plotting dataset - all days v weekdays v weekends
 weekDayPeaks, weekEndPeaks = getWeekDaysAndWeekEndsFromList(peaks)
 
 plotDayData(days[JAN:END], peaks[JAN:END], "", "Peaks", "All Days")
 plotDayData(days[JAN:END], weekDayPeaks[JAN:END], "", "Peaks", "Week Days" )
 plotDayData(days[JAN:END], weekEndPeaks[JAN:END], "", "Peaks", "Weekends")
+'''
 
 #overwriting above, beginning regression
 weekDayPeaks, weekEndPeaks = splitWeekDays(peaks)
@@ -513,27 +518,24 @@ plotHourlyTraffic(hoursGroupedByDay[NOV:DEC], "November")
 #set timeline for below regressions
 start, end = getWeekDayCountBetweenMonths(1, 12)
 X = weekDays[start:end]
-y = weekDayPeaks[start:end]
+y = weekDayAverages[start:end]
 X, y = normalize(X, y)
+c_list = [0.1, 1, 50, 100, 500]
 
 #lasso regression analysis
-cross_validation(X, y, 2, "lasso")
-lassoRegression(X, y, 0.0001, 4)
-lassoRegression(X, y, 0.1, 4)
-lassoRegression(X, y, 1000, 4)
+cross_validation(X, y, c_list, 4, "lasso")
+lassoRegression(X, y, c_list, 4, "Weekdays")
 
 #ridge regression analysis
-cross_validation(X, y, 2, "ridge")
-ridgeRegression(X, y, 0.0001, 4)
-ridgeRegression(X, y, 0.1, 4)
-ridgeRegression(X, y, 1000, 4)
+cross_validation(X, y, c_list, 4, "ridge")
+ridgeRegression(X, y, c_list, 4, "Weekdays")
 
 #kNN regression analysis
-cross_validation(X, y, 2, "kNN")
+cross_validation(X, y, c_list, 2, "kNN")
 kNN(X, y)
 
 #Kernalised kNN regression analysis
-cross_validation(X, y, 2, "kNN")
+cross_validation(X, y, c_list, 2, "kNN")
 kernelizedKNN(X, y)
 
 #dummy regression analysis
@@ -544,8 +546,17 @@ dummy_regressor(X, y)
 
 X = days 
 y = peaks 
+X2 = days2
+y2 = peaks2
 
-kNN(X, y)
+#kNN(X, y)
+
+plt.scatter(X, y, color="darkorange", marker="+")
+plt.scatter(X2, y2, marker=".")
+plt.xlabel("days")
+plt.ylabel("Cyclists")
+plt.title("lasso Regression 2019")
+plt.show()
 
 '''
 #Test data augmentation

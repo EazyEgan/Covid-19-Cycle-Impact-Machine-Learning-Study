@@ -300,9 +300,7 @@ def kNN(Xtrain, ytrain):
 
     plt.rc('font', size=18)
     plt.rcParams['figure.constrained_layout.use'] = True
-#### 2019 ####
     plt.scatter(Xtrain,ytrain, color='red', marker='+')
-
     plt.plot(Xtest, ypred, color='green')
     plt.xlabel("input x")
     plt.ylabel("output y")
@@ -377,7 +375,7 @@ def dummy_regressor(X, y):
 
 ############################### EVALUATION #####################################
 
-def cross_validation(X, y, poly, model):
+def cross_validation(X, y, poly, algorithm):
     mean_error = []
     std_error = []
     f = 5
@@ -389,12 +387,11 @@ def cross_validation(X, y, poly, model):
     for C in C_range:
         a = 1 / (2 * C)
 
-        if(model == "lasso"): model = linear_model.Lasso(alpha=a)
-        elif(model == "ridge"): model = Ridge(alpha=a)
-        elif(model == "kNN"): model =  KNeighborsRegressor(n_neighbors=7, weights='uniform')
+        if(algorithm == "lasso"): model = linear_model.Lasso(alpha=a)
+        elif(algorithm == "ridge"): model = Ridge(alpha=a)
+        elif(algorithm == "kNN"): model =  KNeighborsRegressor(n_neighbors=7, weights='uniform')
         else: model = DummyRegressor(strategy="constant", constant=0.5)
 
-        model = linear_model.Lasso(alpha=a)
         temp = []
 
         kf = KFold(n_splits=f)
@@ -413,7 +410,7 @@ def cross_validation(X, y, poly, model):
     plt.errorbar(C_range, mean_error, yerr=std_error)
     plt.xlabel('C')
     plt.ylabel('Mean square error')
-    plt.title('Lasso Regression 5-fold')
+    plt.title(f'{algorithm} Regression 5-fold')
     plt.show()
 
 
