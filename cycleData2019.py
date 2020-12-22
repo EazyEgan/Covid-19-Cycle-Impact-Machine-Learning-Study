@@ -340,7 +340,7 @@ def kNN(Xtrain, ytrain):#, xtest):
     #start, end = getWeekDayCountBetweenMonths(1, 12)
     #X = weekDays[start:end]
     #y = weekDayPeaks[start:end]
-    X, y = normalize(days2, peaks2)
+   # X, y = normalize(days2, peaks2)
 
     plt.scatter(X,y, color='red', marker='+')
 
@@ -467,8 +467,13 @@ weekEnds = np.array(list(range(0, numWeekEnds))).reshape(-1, 1)
 start, end = getWeekDayCountBetweenMonths(1, 12)
 X = days #weekDays[start:end]
 y = peaks #weekDayPeaks[start:end]
-X, y = normalize(X, y)
-print(X, y)
+#X, y = normalize(X, y)
+
+start, end = getWeekEndCountBetweenMonths(1, 12)
+X2 = weekEnds[start:end]
+y2 = weekEndPeaks[start:end]
+#X2, y2 = normalize(X2, y2)
+
 #Test data augmentation
 """ 
 Xtest = []
@@ -479,6 +484,7 @@ Xtest = np.array(Xtest)
 """
 lassoRegression(X, y, 0.0001, 2)
 ridgeRegression(X, y, 0.0001, 2)
-kNN(X, y)#,Xtest)
+kNN(X2, y2)#,Xtest)
+#kNN(X2, y2)#,Xtest)
 dummy_regressor(X, y)
 cross_validation(X, y, 2)
