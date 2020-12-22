@@ -10,95 +10,32 @@ from sklearn.metrics import mean_squared_error
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.neighbors import KNeighborsRegressor
 from sklearn.dummy import DummyRegressor
+from sklearn.neighbors import KNeighborsClassifier
 
 # start of each month
-JAN = 0;
-FEB = 31;
-MAR = 59;
-APR = 90;
-MAY = 120;
-JUN = 151;
+JAN = 0
+FEB = 31
+MAR = 59
+APR = 90
+MAY = 120
+JUN = 151
 JUL = 181
-AUG = 212;
-SEP = 243;
-OCT = 273;
-NOV = 304;
-DEC = 334;
+AUG = 212
+SEP = 243
+OCT = 273
+NOV = 304
+DEC = 334
 END = 365
 
 #
-DAY_OFFSET = 2;
-MON = 1;
-TUE = 2;
-WED = 3;
-THUR = 4;
-FRI = 5;
-SAT = 6;
+DAY_OFFSET = 2
+MON = 1
+TUE = 2
+WED = 3
+THUR = 4
+FRI = 5
+SAT = 6
 SUN = 7
-
-###########2020########
-
-df2 = pd.read_csv("jan-oct-2020-cycle-data.csv", comment='#')
-
-
-
-GroveRoad2 = np.array(df2.iloc[:, 4])
-
-dataLen2 = len(GroveRoad2)
-numDays2 = int(dataLen2 / 24)
-
-days2 = np.array(list(range(0, numDays2))).reshape(-1, 1)
-hours2 = np.array(list(range(0, 24))).reshape(-1, 1)
-
-hoursGroupedByDay2 = np.array_split(GroveRoad2, numDays2)
-
-# getting peak of each day
-peaks2 = []
-for i in range(0, numDays2):
-    peaks2.append(max(hoursGroupedByDay2[i]))
-peaks2 = np.array(peaks2).reshape(-1, 1)
-########2020#########
-
-########2019#########
-df = pd.read_csv("jan-dec-2019-cycle-data.csv", comment='#')
-
-################################### SET UP ####################################
-
-# identifies null columns
-# print(df[df.iloc[:,1].isnull()])
-# print(df.iloc[2130:2140,1].isnull())
-
-GroveRoad = np.array(df.iloc[:, 1])
-
-dataLen = len(GroveRoad)
-numDays = int(dataLen / 24)
-
-days = np.array(list(range(0, numDays))).reshape(-1, 1)
-hours = np.array(list(range(0, 24))).reshape(-1, 1)
-
-hoursGroupedByDay = np.array_split(GroveRoad, numDays)
-
-# getting peak of each day
-peaks = []
-for i in range(0, numDays):
-    peaks.append(max(hoursGroupedByDay[i]))
-peaks = np.array(peaks).reshape(-1, 1)
-
-# getting min of each day
-mins = []
-for i in range(0, numDays):
-    mins.append(min(hoursGroupedByDay[i]))
-mins = np.array(mins).reshape(-1, 1)
-
-# getting average of each day
-averages = []
-for i in range(0, numDays):
-    averages.append(sum(hoursGroupedByDay[i]) / len(hoursGroupedByDay[i]))
-averages = np.array(averages).reshape(-1, 1)
-
-# reshaping hoursGroupedByDay after above functions to avoid nesting reshaping
-for i in range(0, len(hours)):
-    hoursGroupedByDay[i] = hoursGroupedByDay[i].reshape(-1, 1)
 
 
 ################################ TIMELINE FUNCTIONS #####################################
@@ -113,6 +50,22 @@ def splitWeekDays(daysList):
             weekDays.append(daysList[i])  # monday - friday
         else:
             weekEnds.append(daysList[i])  # saturday, sunday
+
+    weekDays = np.array(weekDays).reshape(-1, 1)
+    weekEnds = np.array(weekEnds).reshape(-1, 1)
+    return weekDays, weekEnds
+
+def getWeekDaysAndWeekEndsFromList(daysList):
+    weekDays = []
+    weekEnds = []
+    for i in range(0, numDays):
+        day = i + DAY_OFFSET
+        if (day % 7 > 0 and day % 7 <= 5):
+            weekDays.append(daysList[i])  # monday - friday
+            weekEnds.append(np.nan)
+        else:
+            weekEnds.append(daysList[i])  # saturday, sunday
+            weekDays.append(np.nan)
 
     weekDays = np.array(weekDays).reshape(-1, 1)
     weekEnds = np.array(weekEnds).reshape(-1, 1)
@@ -144,6 +97,7 @@ def getWeekEndCountBetweenMonths(startMonth, endMonth):
     return startIndex, endIndex
 
 
+
 ################################ NORMALIZING ##################################
 
 def normalize(X, y):
@@ -162,19 +116,19 @@ plt.rc('font', size=18)
 plt.rcParams['figure.constrained_layout.use'] = True
 
 
-def plotDayData(dataType, daysSubArray, dataSubArray, title):
-    plt.scatter(daysSubArray, dataSubArray)
-    plt.xlabel("Hour");
+def plotDayData(X, y, title, dataType, xlabel):
+    plt.scatter(X, y)
+    plt.xlabel(xlabel)
     plt.ylabel("Cyclists")
-    plt.legend([f'Day {dataType}'])
-    plt.title(f"{title} cycle volume 2019")
+    plt.legend([f'Daily {dataType}'], loc=1)
+    plt.title(f"{title} Cycle Volume 2019")
     plt.show()
 
 
-def plotHourlyTraffic(hoursGroupedSub, title):
+def plotHourlyTraffic(y, title):
     for i in range(0, len(hours)):
-        plt.plot(hours, hoursGroupedSub[i])
-    plt.xlabel("Hour");
+        plt.plot(hours, y[i])
+    plt.xlabel("Hour")
     plt.ylabel("Cyclists")
     plt.legend(['Total'])
     plt.title(f"{title} cycle volume 2019")
@@ -197,7 +151,7 @@ def lassoRegression(X, y, c, poly):
 
     plt.scatter(X, y, color="blue")
     plt.plot(X, yPred, color="red")
-    plt.xlabel("Days");
+    plt.xlabel("Days")
     plt.ylabel("Cyclists")
     plt.title("lasso Regression 2019")
     plt.show()
@@ -301,10 +255,19 @@ plt.ylabel('petal width [cm]')
 plt.legend(loc='upper left')
 plt.show()
 """
+def gaussian_kernel100(distances):
+    weights = np.exp(-100 * (distances ** 2))
+    return weights / np.sum(weights)
 
-def kNN(Xtrain, ytrain):#, xtest):
+def gaussian_kernel1000(distances):
+    weights = np.exp(-1000 * (distances ** 2))
+    return weights / np.sum(weights)
 
-    from sklearn.neighbors import KNeighborsClassifier
+def gaussian_kernel10000(distances):
+    weights = np.exp(-10000 * (distances ** 2))
+    return weights / np.sum(weights)
+
+def kNN(Xtrain, ytrain):
     """
     model = KNeighborsClassifier(n_neighbors=7, weights='uniform').fit(Xtrain, ytrain)
     ypred = model.predict(Xtrain)
@@ -337,7 +300,7 @@ def kNN(Xtrain, ytrain):#, xtest):
     model = KNeighborsRegressor(n_neighbors=7, weights='uniform').fit(Xtrain, ytrain) #ANything on or above is weekday
     ypred = model.predict(Xtest)
 
-    plt.rc('font', size=18);
+    plt.rc('font', size=18)
     plt.rcParams['figure.constrained_layout.use'] = True
 #### 2019 ####
     plt.scatter(Xtrain,ytrain, color='red', marker='+')
@@ -353,13 +316,16 @@ def kNN(Xtrain, ytrain):#, xtest):
     plt.scatter(X2,y2, color='red', marker='+')
 
     plt.plot(Xtest, ypred, color='green')
-    plt.xlabel("input x");
-    plt.ylabel("output y");
+    plt.xlabel("input x")
+    plt.ylabel("output y")
     plt.legend(["predict", "train"])
     plt.show()
 
+    '''
+
 ##### WEEKENDS ##### MODEL MUST BE TRAINED ON WEEKEND DATA THAT HASNT BEEN EXTRACTED FROM THE DATASET BECAUSE IT TREATS THEM AS BEING SEQUENTIAL
     #OR MAYBE WE CAN JUST STRETCH IT OUT BECAUSE IT MIGHT BE THE SAME? NOT ENTIRELY SURE PLUS IT'S 5:11 AM AND I HAVE BEEN AWAKE FAR TOO LONG
+    
     start, end = getWeekEndCountBetweenMonths(1, 12)
     X = weekEnds[start:end]
     y = weekEndPeaks[start:end]
@@ -370,8 +336,8 @@ def kNN(Xtrain, ytrain):#, xtest):
     plt.scatter(Xtrain, ytrain, color='red', marker='+')
 
     plt.plot(X, ypred, color='green')
-    plt.xlabel("input x");
-    plt.ylabel("output y");
+    plt.xlabel("input x")
+    plt.ylabel("output y")
     plt.legend(["predict", "train"])
     plt.show()
 
@@ -379,22 +345,13 @@ def kNN(Xtrain, ytrain):#, xtest):
     plt.scatter(X2, y2, color='red', marker='+')
 
     plt.plot(X, ypred, color='green')
-    plt.xlabel("input x");
-    plt.ylabel("output y");
+    plt.xlabel("input x")
+    plt.ylabel("output y")
     plt.legend(["predict", "train"])
     plt.show()
-
-    def gaussian_kernel100(distances):
-        weights = np.exp(-100 * (distances ** 2))
-        return weights / np.sum(weights)
-
-    def gaussian_kernel1000(distances):
-        weights = np.exp(-1000 * (distances ** 2))
-        return weights / np.sum(weights)
-
-    def gaussian_kernel10000(distances):
-        weights = np.exp(-10000 * (distances ** 2))
-        return weights / np.sum(weights)
+    '''
+def kernelizedKNN(Xtrain, ytrain):
+    Xtest = Xtrain
 
     model2 = KNeighborsRegressor(n_neighbors=7, weights=gaussian_kernel100).fit(Xtrain, ytrain)
     ypred2 = model2.predict(Xtest)
@@ -424,7 +381,7 @@ def dummy_regressor(X, y):
 
     plt.scatter(X, y, color="blue")
     plt.plot(X, yPred, color="red")
-    plt.xlabel("Days");
+    plt.xlabel("Days")
     plt.ylabel("Cyclists")
     plt.title("Dummy Regression 2019")
     plt.show()
@@ -432,8 +389,8 @@ def dummy_regressor(X, y):
 
 ############################### EVALUATION #####################################
 
-def cross_validation(X, y, poly):
-    mean_error = [];
+def cross_validation(X, y, poly, model):
+    mean_error = []
     std_error = []
     f = 5
     C_range = [0.001, 0.01, 1, 100, 1000]
@@ -443,6 +400,12 @@ def cross_validation(X, y, poly):
 
     for C in C_range:
         a = 1 / (2 * C)
+
+        if(model == "lasso"): model = linear_model.Lasso(alpha=a)
+        elif(model == "ridge"): model = Ridge(alpha=a)
+        elif(model == "kNN"): model =  KNeighborsRegressor(n_neighbors=7, weights='uniform')
+        else: model = DummyRegressor(strategy="constant", constant=0.5)
+
         model = linear_model.Lasso(alpha=a)
         temp = []
 
@@ -451,26 +414,91 @@ def cross_validation(X, y, poly):
             model.fit(polyX[train], y[train])
             ypred = model.predict(polyX[test])
             # print("intercept ", model.intercept_, "slope ", model.coef_, " square error ", mean_squared_error(polyX[test], ypred))
-            temp.append(mean_squared_error(peaks[test], ypred))
+            temp.append(mean_squared_error(y[test], ypred))
         mean_error.append(np.array(temp).mean())
         std_error.append(np.array(temp).std())
 
-        scores = cross_val_score(linear_model.Lasso(), polyX, y, cv=5, scoring='neg_mean_squared_error')
+        scores = cross_val_score(model, polyX, y, cv=5, scoring='neg_mean_squared_error')
         print(scores)
         print("Accuracy: %0.2f (+/- %0.2f)" % (scores.mean(), scores.std()))
 
     plt.errorbar(C_range, mean_error, yerr=std_error)
-    plt.xlabel('C');
+    plt.xlabel('C')
     plt.ylabel('Mean square error')
     plt.title('Lasso Regression 5-fold')
     plt.show()
 
 
-############################### EXECUTION ########################################
+################################# SET UP ########################################
 
+#2019#
+# ---------------data cleaning notes-----------------
+# 2139 missing row from excel file
+# NaN rows (4082-4097) filled in with zeros
+
+df = pd.read_csv("jan-dec-2019-cycle-data.csv", comment='#')
+
+# identifies null columns
+# print(df[df.iloc[:,1].isnull()])
+# print(df.iloc[2130:2140,1].isnull())
+
+GroveRoad = np.array(df.iloc[:, 1])
+
+dataLen = len(GroveRoad)
+numDays = int(dataLen / 24)
+days = np.array(list(range(0, numDays))).reshape(-1, 1)
+hours = np.array(list(range(0, 24))).reshape(-1, 1)
+hoursGroupedByDay = np.array_split(GroveRoad, numDays)
+
+peaks = []
+mins = []
+averages = []
+
+for i in range(0, numDays):
+    peaks.append(max(hoursGroupedByDay[i]))
+    mins.append(min(hoursGroupedByDay[i]))
+    averages.append(sum(hoursGroupedByDay[i]) / len(hoursGroupedByDay[i]))
+
+peaks = np.array(peaks).reshape(-1, 1)
+mins = np.array(mins).reshape(-1, 1)
+averages = np.array(averages).reshape(-1, 1)
+
+# reshaping hoursGroupedByDay after above functions to avoid nesting reshaping
+for i in range(0, len(hours)):
+    hoursGroupedByDay[i] = hoursGroupedByDay[i].reshape(-1, 1)
+
+
+#------------- COMPARISON SET UP ---------------#
+# 2020 #
+df2 = pd.read_csv("jan-oct-2020-cycle-data.csv", comment='#')
+
+GroveRoad2 = np.array(df2.iloc[:, 4])
+
+dataLen2 = len(GroveRoad2)
+numDays2 = int(dataLen2 / 24)
+days2 = np.array(list(range(0, numDays2))).reshape(-1, 1)
+hours2 = np.array(list(range(0, 24))).reshape(-1, 1)
+hoursGroupedByDay2 = np.array_split(GroveRoad2, numDays2)
+
+# getting peak of each day
+peaks2 = []
+for i in range(0, numDays2):
+    peaks2.append(max(hoursGroupedByDay2[i]))
+peaks2 = np.array(peaks2).reshape(-1, 1)
+
+
+################################ main sequence ###################################
+#plotting dataset - all days v weekdays v weekends
+weekDayPeaks, weekEndPeaks = getWeekDaysAndWeekEndsFromList(peaks)
+
+plotDayData(days[JAN:END], peaks[JAN:END], "", "Peaks", "All Days")
+plotDayData(days[JAN:END], weekDayPeaks[JAN:END], "", "Peaks", "Week Days" )
+plotDayData(days[JAN:END], weekEndPeaks[JAN:END], "", "Peaks", "Weekends")
+
+#overwriting above, beginning regression
 weekDayPeaks, weekEndPeaks = splitWeekDays(peaks)
-weekDayMins, weekEndMins = splitWeekDays(mins)
 weekDayAverages, weekEndAverages = splitWeekDays(averages)
+weekDayMins, weekEndMins = splitWeekDays(mins)
 
 # week days/ends as long as any of the arbitrarily picked averages/peaks/min
 numWeekDays = len(weekDayAverages)
@@ -479,25 +507,47 @@ numWeekEnds = len(weekEndAverages)
 weekDays = np.array(list(range(0, numWeekDays))).reshape(-1, 1)
 weekEnds = np.array(list(range(0, numWeekEnds))).reshape(-1, 1)
 
-##plotDayData((string) dataType, days[day range], peaks[day range], (string) time period)
-# plotDayData("Peaks", days[JAN:FEB], peaks[JAN:FEB], "January")
+#hourly traffic
+plotHourlyTraffic(hoursGroupedByDay[NOV:DEC], "November")
 
-# start, end = getWeekDayCountBetweenMonths(1, 12)
-# plotDayData("Peaks", weekDays[start:end], weekDayPeaks[start:end], "Full year")
-
-##plotHourlyTraffic(hoursGroupedByDay[day_range], title)
-# plotHourlyTraffic(hoursGroupedByDay[NOV:DEC], "November")
-
+#set timeline for below regressions
 start, end = getWeekDayCountBetweenMonths(1, 12)
-X = days #weekDays[start:end]
-y = peaks #weekDayPeaks[start:end]
-#X, y = normalize(X, y)
+X = weekDays[start:end]
+y = weekDayPeaks[start:end]
+X, y = normalize(X, y)
 
-start, end = getWeekEndCountBetweenMonths(1, 12)
-Xwknd = weekEnds[start:end]
-ywknd = weekEndPeaks[start:end]
-#X2, y2 = normalize(X2, y2)
+#lasso regression analysis
+cross_validation(X, y, 2, "lasso")
+lassoRegression(X, y, 0.0001, 4)
+lassoRegression(X, y, 0.1, 4)
+lassoRegression(X, y, 1000, 4)
 
+#ridge regression analysis
+cross_validation(X, y, 2, "ridge")
+ridgeRegression(X, y, 0.0001, 4)
+ridgeRegression(X, y, 0.1, 4)
+ridgeRegression(X, y, 1000, 4)
+
+#kNN regression analysis
+cross_validation(X, y, 2, "kNN")
+kNN(X, y)
+
+#Kernalised kNN regression analysis
+cross_validation(X, y, 2, "kNN")
+kernelizedKNN(X, y)
+
+#dummy regression analysis
+dummy_regressor(X, y)
+
+
+############################# COMPARISON ####################################
+
+X = days 
+y = peaks 
+
+kNN(X, y)
+
+'''
 #Test data augmentation
 """ 
 Xtest = []
@@ -506,9 +556,19 @@ for i in grid:
     Xtest.append([i])
 Xtest = np.array(Xtest)
 """
+
+X = days 
+y = peaks 
+#X, y = normalize(X, y)
+
+start, end = getWeekEndCountBetweenMonths(1, 12)
+Xwknd = weekEnds[start:end]
+ywknd = weekEndPeaks[start:end]
+#X2, y2 = normalize(X2, y2)
+
 lassoRegression(X, y, 0.0001, 2)
 ridgeRegression(X, y, 0.0001, 2)
-kNN(X, y)#,Xtest) #Xwknd, ywknd is weekends only
-#kNN(X, y)#,Xtest) #X,y is all days and all peaks
+kNN(X, y)
 dummy_regressor(X, y)
-cross_validation(X, y, 2)
+cross_validation(X, y, 2, "lasso")
+'''
