@@ -36,9 +36,29 @@ FRI = 5;
 SAT = 6;
 SUN = 7
 
-# ---------------data cleaning notes-----------------
-# 2139 missing row from excel file
-# NaN rows (4082-4097) - inserted 0s for the moment
+###########2020########
+
+df2 = pd.read_csv("jan-oct-2020-cycle-data.csv", comment='#')
+
+
+
+GroveRoad2 = np.array(df2.iloc[:, 4])
+
+dataLen2 = len(GroveRoad2)
+numDays2 = int(dataLen2 / 24)
+
+days2 = np.array(list(range(0, numDays2))).reshape(-1, 1)
+hours2 = np.array(list(range(0, 24))).reshape(-1, 1)
+
+hoursGroupedByDay2 = np.array_split(GroveRoad2, numDays2)
+
+# getting peak of each day
+peaks2 = []
+for i in range(0, numDays2):
+    peaks2.append(max(hoursGroupedByDay2[i]))
+peaks2 = np.array(peaks2).reshape(-1, 1)
+
+
 
 df = pd.read_csv("jan-dec-2019-cycle-data.csv", comment='#')
 
@@ -317,11 +337,21 @@ def kNN(Xtrain, ytrain):#, xtest):
 
     plt.rc('font', size=18);
     plt.rcParams['figure.constrained_layout.use'] = True
-    start, end = getWeekDayCountBetweenMonths(1, 12)
-    X = weekDays[start:end]
-    y = weekDayPeaks[start:end]
-    X, y = normalize(X, y)
-    #plt.scatter(X, y, color='blue', marker='o')
+    #start, end = getWeekDayCountBetweenMonths(1, 12)
+    #X = weekDays[start:end]
+    #y = weekDayPeaks[start:end]
+    X, y = normalize(days2, peaks2)
+
+    plt.scatter(X,y, color='red', marker='+')
+
+    plt.plot(Xtest, ypred, color='green')
+    plt.xlabel("input x");
+    plt.ylabel("output y");
+    plt.legend(["predict", "train"])
+    plt.show()
+
+
+
     plt.scatter(Xtrain, ytrain, color='red', marker='+')
 
     plt.plot(Xtest, ypred, color='green')
@@ -439,7 +469,8 @@ X = days #weekDays[start:end]
 y = peaks #weekDayPeaks[start:end]
 X, y = normalize(X, y)
 print(X, y)
-""" Test data augmentation
+#Test data augmentation
+""" 
 Xtest = []
 grid = np.linspace(-3, 3)
 for i in grid:

@@ -25,7 +25,7 @@ OCT = 274
 NOV = 305
 
 #
-DAY_OFFSET = 2;
+DAY_OFFSET = 3;
 MON = 1;
 TUE = 2;
 WED = 3;
@@ -46,7 +46,7 @@ df = pd.read_csv("jan-oct-2020-cycle-data.csv", comment='#')
 # print(df[df.iloc[:,1].isnull()])
 # print(df.iloc[2130:2140,1].isnull())
 
-GroveRoad = np.array(df.iloc[:, 1])
+GroveRoad = np.array(df.iloc[:, 4])
 
 dataLen = len(GroveRoad)
 numDays = int(dataLen / 24)
@@ -236,6 +236,12 @@ def kNN(Xtrain, ytrain):
 
     plt.rc('font', size=18);
     plt.rcParams['figure.constrained_layout.use'] = True
+    start, end = getWeekDayCountBetweenMonths(1, 12)
+    X = weekDays[start:end]
+    y = weekDayPeaks[start:end]
+    #X, y = normalize(X, y)
+    print(X,y)
+    plt.scatter(X, y, color='blue', marker='o')
     plt.scatter(Xtrain, ytrain, color='red', marker='+')
     plt.plot(Xtest, ypred, color='green')
     plt.xlabel("input x");
@@ -358,9 +364,9 @@ weekEnds = np.array(list(range(0, numWeekEnds))).reshape(-1, 1)
 
 
 start, end = getWeekDayCountBetweenMonths(1, 10)
-X = weekDays[start:end]
-y = weekDayPeaks[start:end]
-X, y = normalize(X, y)
+X = days #weekDays[start:end]
+y = peaks #weekDayPeaks[start:end]
+#X, y = normalize(X, y)
 
 lassoRegression(X, y, 10000, 4)
 ridgeRegression(X, y, 10000, 4)
