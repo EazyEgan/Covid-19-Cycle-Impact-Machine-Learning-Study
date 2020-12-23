@@ -101,7 +101,7 @@ def getWeekEndCountBetweenMonths(startMonth, endMonth):
 ################################ NORMALIZING ##################################
 
 def normalize(X, y):
-    scaler = MinMaxScaler()
+    scaler = MinMaxScaler() #defalut range 0-1
     scaler.fit(X)
     X = scaler.transform(X)
 
@@ -155,7 +155,7 @@ def lassoRegression(X, y, c_list, poly, xlabel):
     plt.xlabel(xlabel)
     plt.legend()
     plt.ylabel("Cyclists")
-    plt.title("lasso Regression 2019")
+    plt.title("Lasso Regression 2019")
     plt.show()
 
 
@@ -184,81 +184,7 @@ def ridgeRegression(X, y, c_list, poly, xlabel):
 
 ############################ KNN REGRESSION ####################################
 # CURRENTLY OVERFIT - HAVE TO CHANGE NEIGHBOURS
-"""
-from sklearn import datasets
-from sklearn.model_selection import train_test_split
 
-from sklearn.preprocessing import StandardScaler
-from sklearn.neighbors import KNeighborsClassifier
-
-import numpy as np
-import matplotlib.pyplot as plt
-from matplotlib.colors import ListedColormap
-
-def plot_decision_regions(X, y, classifier, test_idx=None, resolution=0.02):
-   # setup marker generator and color map
-   markers = ('s', 'x', 'o', '^', 'v')
-   colors = ('red', 'blue', 'lightgreen', 'gray', 'cyan')
-   cmap = ListedColormap(colors[:len(np.unique(y))])
-
-   # plot the decision surface
-   x1_min, x1_max = X[:, 0].min() - 1, X[:, 0].max() + 1
-   x2_min, x2_max = X[:, 1].min() - 1, X[:, 1].max() + 1
-   xx1, xx2 = np.meshgrid(np.arange(x1_min, x1_max, resolution),
-   np.arange(x2_min, x2_max, resolution))
-   Z = classifier.predict(np.array([xx1.ravel(), xx2.ravel()]).T)
-   Z = Z.reshape(xx1.shape)
-   plt.contourf(xx1, xx2, Z, alpha=0.4, cmap=cmap)
-   plt.xlim(xx1.min(), xx1.max())
-   plt.ylim(xx2.min(), xx2.max())
-
-   # plot all samples
-   X_test, y_test = X[test_idx, :], y[test_idx]
-   for idx, cl in enumerate(np.unique(y)):
-      plt.scatter(x=X[y == cl, 0], y=X[y == cl, 1],
-               alpha=0.8, c=cmap(idx),
-               marker=markers[idx], label=cl)
-   # highlight test samples
-   if test_idx:
-      X_test, y_test = X[test_idx, :], y[test_idx]
-      plt.scatter(X_test[:, 0], X_test[:, 1], c='',
-               alpha=1.0, linewidth=1, marker='o',
-               s=55, label='test set')
-
-
-start, end = getWeekDayCountBetweenMonths(1, 12)
-X = days[start:end]
-y = peaks[start:end]
-X, y = normalize(X, y)
-
-X_train = X
-X_test = X
-y_train= y
-y_test = y
-
-sc = StandardScaler()
-X_train_std = sc.fit_transform(X_train)
-X_test_std = sc.fit_transform(X_test)
-
-X_combined_std = np.vstack((X_train_std, X_test_std))
-print(len(X_train_std), len(X_test_std))
-print(len(y_train), len(y_test))
-y_combined = np.hstack((y_train, y_test))
-
-knn = KNeighborsClassifier(n_neighbors=5, p=2,
-                           metric='minkowski')
-import pandas as pd
-y_resampled = pd.DataFrame(y_train)
-knn.fit(X_train_std, y_resampled.values.ravel())
-
-plot_decision_regions(X_combined_std, y_combined,
-                      classifier=knn, test_idx=range(105,150))
-
-plt.xlabel('petal length [cm]')
-plt.ylabel('petal width [cm]')
-plt.legend(loc='upper left')
-plt.show()
-"""
 def gaussian_kernel100(distances):
     weights = np.exp(-100 * (distances ** 2))
     return weights / np.sum(weights)
@@ -272,31 +198,6 @@ def gaussian_kernel10000(distances):
     return weights / np.sum(weights)
 
 def kNN(Xtrain, ytrain):
-    """
-    model = KNeighborsClassifier(n_neighbors=7, weights='uniform').fit(Xtrain, ytrain)
-    ypred = model.predict(Xtrain)
-    plt.scatter(Xtrain, ytrain, color='red', marker ='+')
-    plt.plot(Xtrain, ypred, color='green')
-    plt.xlabel("inputx")
-    plt.ylabel("outputy")
-    plt.legend(["predict", "train"])
-    plt.show()
-    
-    ############################### KNN CLASSIFIER #################################
-    
-    from sklearn.neighbors import KNeighborsClassifier
-    model = KNeighborsClassifier(n_neighbors=5,weights='uniform').fit(Xtrain, ytrain)
-    Xtest = Xtrain
-    ypred = model.predict(Xtrain)
-    import matplotlib.pyplot as plt
-    plt.rc('font', size=18); plt.rcParams['figure.constrained_layout.use'] = True
-    plt.scatter(Xtrain, ytrain, color='red', marker='+')
-    plt.plot(Xtest, ypred, color='green')
-    plt.xlabel("input x"); plt.ylabel("output y")
-    plt.legend(["predict","train"])
-    plt.show()
-    """
-
     Xtest = Xtrain #xtest
 
 
@@ -325,35 +226,6 @@ def kNN(Xtrain, ytrain):
     plt.legend(["predict", "train"])
     plt.show()
 
-    '''
-
-##### WEEKENDS ##### MODEL MUST BE TRAINED ON WEEKEND DATA THAT HASNT BEEN EXTRACTED FROM THE DATASET BECAUSE IT TREATS THEM AS BEING SEQUENTIAL
-    #OR MAYBE WE CAN JUST STRETCH IT OUT BECAUSE IT MIGHT BE THE SAME? NOT ENTIRELY SURE PLUS IT'S 5:11 AM AND I HAVE BEEN AWAKE FAR TOO LONG
-    
-    start, end = getWeekEndCountBetweenMonths(1, 12)
-    X = weekEnds[start:end]
-    y = weekEndPeaks[start:end]
-    #X, y = normalize(days2, peaks2)
-    model = KNeighborsRegressor(n_neighbors=7, weights='uniform').fit(X, y)  # ANything on or above is weekday
-    ypred = model.predict(X)
-    #### 2019 ####
-    plt.scatter(Xtrain, ytrain, color='red', marker='+')
-
-    plt.plot(X, ypred, color='green')
-    plt.xlabel("input x")
-    plt.ylabel("output y")
-    plt.legend(["predict", "train"])
-    plt.show()
-
-    #### 2020 ####
-    plt.scatter(X2, y2, color='red', marker='+')
-
-    plt.plot(X, ypred, color='green')
-    plt.xlabel("input x")
-    plt.ylabel("output y")
-    plt.legend(["predict", "train"])
-    plt.show()
-    '''
 def kernelizedKNN(Xtrain, ytrain):
     Xtest = Xtrain
 
@@ -405,9 +277,9 @@ def cross_validation(X, y, c_list, poly, algorithm):
     for C in C_range:
         a = 1 / (2 * C)
 
-        if(algorithm == "lasso"): model = linear_model.Lasso(alpha=a)
-        elif(algorithm == "ridge"): model = Ridge(alpha=a)
-        elif(algorithm == "kNN"): model =  KNeighborsRegressor(n_neighbors=7, weights='uniform')
+        if(algorithm == "Lasso"): model = linear_model.Lasso(alpha=a)
+        elif(algorithm == "Ridge"): model = Ridge(alpha=a)
+        elif(algorithm == "KNN"): model =  KNeighborsRegressor(n_neighbors=7, weights='uniform')
         else: model = DummyRegressor(strategy="constant", constant=0.5)
 
         temp = []
@@ -523,19 +395,19 @@ X, y = normalize(X, y)
 c_list = [0.1, 1, 50, 100, 500]
 
 #lasso regression analysis
-cross_validation(X, y, c_list, 4, "lasso")
-lassoRegression(X, y, c_list, 4, "Weekdays")
+cross_validation(X, y, c_list, 1, "Lasso")
+lassoRegression(X, y, c_list, 1, "Weekdays")
 
 #ridge regression analysis
-cross_validation(X, y, c_list, 4, "ridge")
-ridgeRegression(X, y, c_list, 4, "Weekdays")
+cross_validation(X, y, c_list, 1, "Ridge")
+ridgeRegression(X, y, c_list, 1, "Weekdays")
 
 #kNN regression analysis
-cross_validation(X, y, c_list, 2, "kNN")
+cross_validation(X, y, c_list, 2, "KNN")
 kNN(X, y)
 
 #Kernalised kNN regression analysis
-cross_validation(X, y, c_list, 2, "kNN")
+cross_validation(X, y, c_list, 2, "Kernelized KNN")
 kernelizedKNN(X, y)
 
 #dummy regression analysis
