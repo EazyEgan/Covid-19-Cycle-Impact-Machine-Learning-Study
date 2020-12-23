@@ -225,57 +225,83 @@ def ridgeRegressionP(X, y, Xtest, C, p_list, xlabel):
 ############################ KNN REGRESSION ####################################
 # CURRENTLY OVERFIT - HAVE TO CHANGE NEIGHBOURS
 
-def gaussian_kernel100(distances):
-    weights = np.exp(-100 * (distances ** 2))
-    return weights / np.sum(weights)
+gamIndex=0;
+gamma=0
 
-def gaussian_kernel1000(distances):
-    weights = np.exp(-1000 * (distances ** 2))
-    return weights / np.sum(weights)
+gamArray = [0,0.0001,0.001,0.01,0.1]#,5,10,25]
 
-def gaussian_kernel10000(distances):
-    weights = np.exp(-10000 * (distances ** 2))
-    return weights / np.sum(weights)
+def gaussian_kernel0(distances):
+    weights = np.exp(0*(distances**2))
+    #distArray.append(distances)
+    return weights/np.sum(weights)
+
+def gaussian_kernel0001(distances):
+    weights = np.exp(-0.0001*(distances**2))
+    #distArray.append(distances)
+    return weights/np.sum(weights)
+
+def gaussian_kernel001(distances):
+    weights = np.exp(-0.001*(distances**2))
+    #distArray.append(distances)
+    return weights/np.sum(weights)
+
+def gaussian_kernel01(distances):
+    weights = np.exp(-0.01*(distances**2))
+    #distArray.append(distances)
+    return weights/np.sum(weights)
+
+def gaussian_kernel1(distances):
+    weights = np.exp(-0.1*(distances**2))
+    #distArray.append(distances)
+    return weights/np.sum(weights)
+
+
+def gaussian_kernel(distances):
+    weights = np.exp(-gamma*(distances**2))
+    return weights/np.sum(weights)
 
 def kNN(Xtrain, ytrain):
-    Xtest = Xtrain #xtest
+    Xtest = Xtrain  # xtest
 
-
-###### WEEKEDAYS ########
-    model = KNeighborsRegressor(n_neighbors=7, weights='uniform').fit(Xtrain, ytrain) #ANything on or above is weekday
+    ###### WEEKEDAYS ########
+    model = KNeighborsRegressor(n_neighbors=7, weights='uniform').fit(Xtrain, ytrain)  # ANything on or above is weekday
     ypred = model.predict(Xtest)
 
     plt.rc('font', size=18)
     plt.rcParams['figure.constrained_layout.use'] = True
-#### 2019 ####
-    plt.scatter(Xtrain,ytrain, marker="." )
+    #### 2019 ####
+    plt.title("2020 kNN Regression")
+    plt.scatter(Xtrain, ytrain, marker=".")
 
     plt.plot(Xtest, ypred, color='darkorange')
-    plt.xlabel("input x")
-    plt.ylabel("output y")
+    plt.xlabel("Days")
+    plt.ylabel("Averages")
     plt.legend(["predict", "train"])
     plt.show()
 
+
+
+gamArray = [0,0.0001,0.001,0.01,0.1]#,5,10,25]
 def kernelizedKNN(Xtrain, ytrain):
+    global gamma
     Xtest = Xtrain
-
-    model2 = KNeighborsRegressor(n_neighbors=7, weights=gaussian_kernel100).fit(Xtrain, ytrain)
-    ypred2 = model2.predict(Xtest)
-
-    model3 = KNeighborsRegressor(n_neighbors=7, weights=gaussian_kernel1000).fit(Xtrain, ytrain)
-    ypred3 = model3.predict(Xtest)
-
-    model4 = KNeighborsRegressor(n_neighbors=7, weights=gaussian_kernel10000).fit(Xtrain, ytrain)
-    ypred4 = model4.predict(Xtest)
-
+    legendlist = []
+    plt.title("2020 kNN Kernelized Regression")
     plt.scatter(Xtrain, ytrain, marker=".")
-    plt.plot(Xtest, ypred2, color='purple')
-    plt.plot(Xtest, ypred3, color='darkorange')
-    plt.plot(Xtest, ypred4, color='green')
-    plt.xlabel("input x")
-    plt.ylabel("output y")
-    plt.legend(["k=7,sigma=100", "k=7,sigma=1000", "k=7,sigma=10000", "train"])
+    for gam in gamArray:
+        gamma = gam
+        model = KNeighborsRegressor(n_neighbors=len(Xtrain), weights=gaussian_kernel).fit(Xtrain, ytrain)  # ANything on or above is weekday
+        ypred = model.predict(Xtest)
+        plt.plot(Xtest, ypred)
+        legendlist.append("k=7, gamma = " + str(gam))
+
+    plt.xlabel("Days")
+    plt.ylabel("Averages")
+    legendlist.append("train")
+    plt.legend(loc='upper right')
+    plt.legend(legendlist,prop={"size":10})
     plt.show()
+
 
 
 ############################### DUMMY REGRESSION ##############################
@@ -294,6 +320,64 @@ def dummy_regressor(X, y):
 
 
 ############################### EVALUATION #####################################
+
+
+def cross_validation(X, y, c_list, poly, algorithm):
+    mean_error = []
+    std_error = []
+    f = 5
+    C_range = c_list
+
+    poly = PolynomialFeatures(poly)
+    polyX = poly.fit_transform(X)
+
+    for C in C_range:
+        a = 1 / (2 * C)
+
+        if (algorithm == "Lasso"):
+            model = linear_model.Lasso(alpha=a)
+        elif (algorithm == "Ridge"):
+            model = Ridge(alpha=a)
+        elif (algorithm == "KNN"):
+            model = KNeighborsRegressor(n_neighbors=7, weights='uniform')
+        elif (algorithm == "kNNkern"): model = KNeighborsRegressor(n_neighbors=C, weights=gaussian_kernel)
+        else:
+            model = DummyRegressor(strategy="constant", constant=0.5)
+
+        temp = []
+
+        kf = KFold(n_splits=f)
+        for train, test in kf.split(polyX):
+            model.fit(polyX[train], y[train])
+            ypred = model.predict(polyX[test])
+            # print("intercept ", model.intercept_, "slope ", model.coef_, " square error ", mean_squared_error(polyX[test], ypred))
+            temp.append(mean_squared_error(y[test], ypred))
+
+        if (algorithm == "kNNkern"):
+            ################################# kNN EVALUATION ################################
+
+            from sklearn.model_selection import GridSearchCV
+            gaussian_kernelCV = [gaussian_kernel0, gaussian_kernel0001, gaussian_kernel001, gaussian_kernel01,
+                                 gaussian_kernel1]
+            gamArrayDict = dict(weights=gaussian_kernelCV);
+            clf = GridSearchCV(model, gamArrayDict, cv=5)
+            best_model = clf.fit(X, y)
+            print("Best gamma: ",
+                  best_model.best_estimator_.get_params()['weights'])  # Gives best gamma - hyper param tuning
+
+        mean_error.append(np.array(temp).mean())
+        std_error.append(np.array(temp).std())
+
+        scores = cross_val_score(model, polyX, y, cv=5, scoring='neg_mean_squared_error')
+        print(scores)
+        print("Accuracy: %0.2f (+/- %0.2f)" % (scores.mean(), scores.std()))
+
+    plt.errorbar(C_range, mean_error, yerr=std_error)
+    plt.xlabel('C')
+    plt.ylabel('Mean square error')
+    plt.title(f'{algorithm} Regression 5-fold')
+    plt.show()
+
 
 def cross_validation_C(X, y, c_list, poly, algorithm):
     mean_error = []
@@ -436,8 +520,39 @@ weekEnds = np.array(list(range(0, numWeekEnds))).reshape(-1, 1)
 start, end = getWeekDayCountBetweenMonths(1, 10)
 X = weekDays[start:end]
 y = weekDayAverages[start:end]
-X, y = normalize(X, y)
+#X, y = normalize(X, y)
 c_list = [1, 50, 100, 200, 400, 800]
+k_list = [1,2,3,4,5,6,7,8,9,10]
+Xnorm, ynorm = normalize(X, y)
+cross_validation(Xnorm, ynorm, k_list, 2, "kNN")
+
+
+cross_validation(Xnorm, ynorm, k_list, 2, "kNNkern")
+kNN(X, y)
+kernelizedKNN(X,y)
+
+#kNN regression analysis
+start, end = getWeekDayCountBetweenMonths(1, 12)
+X = weekDays[start:end]
+y = weekDayAverages[start:end]
+Xnorm, ynorm = normalize(X, y)
+cross_validation(Xnorm, ynorm, k_list, 2, "kNN")
+cross_validation(Xnorm, ynorm, k_list, 2, "kNNkern")
+kNN(X, y)
+kernelizedKNN(X, y)
+
+#kNN regression analysis
+start, end = getWeekEndCountBetweenMonths(1, 12)
+X = weekEnds[start:end]
+y = weekEndAverages[start:end]
+Xnorm, ynorm = normalize(X, y)
+cross_validation(Xnorm, ynorm, k_list, 2, "kNN")
+
+
+cross_validation(Xnorm, ynorm, k_list, 2, "kNNkern")
+kNN(X, y)
+kernelizedKNN(X, y)
+X, y = normalize(X, y)
 p_list = [1, 2, 3, 4, 5]
 polynomial = 3
 C = 500
