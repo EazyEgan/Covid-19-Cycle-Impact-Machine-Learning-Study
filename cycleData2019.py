@@ -183,12 +183,12 @@ def ridgeRegression(X, y, c_list, poly, xlabel):
 gamIndex=0;
 gamma=0
 
-gamArray = [0,0.0001,0.001,0.01,0.1]#,5,10,25]
+gamArray = [0.0001,0.001,0.01,0.1]#,5,10,25]
 
-def gaussian_kernel0(distances):
-    weights = np.exp(0*(distances**2))
+#def gaussian_kernel0(distances):
+#    weights = np.exp(-0*(distances**2))
     #distArray.append(distances)
-    return weights/np.sum(weights)
+#    return weights/np.sum(weights)
 
 def gaussian_kernel0001(distances):
     weights = np.exp(-0.0001*(distances**2))
@@ -215,70 +215,69 @@ def gaussian_kernel(distances):
     weights = np.exp(-gamma*(distances**2))
     return weights/np.sum(weights)
 
-def kNN(Xtrain, ytrain):
+def kNN(Xtrain, ytrain,k_list):
     Xtest = Xtrain  # xtest
+    legendlist =[]
 
     ###### WEEKEDAYS ########
-    model = KNeighborsRegressor(n_neighbors=7, weights='uniform').fit(Xtrain, ytrain)  # ANything on or above is weekday
-    ypred = model.predict(Xtest)
-
     plt.rc('font', size=18)
     plt.rcParams['figure.constrained_layout.use'] = True
     #### 2019 ####
-    plt.title("2019 kNN Regression")
-    plt.scatter(Xtrain, ytrain, marker=".")
+    plt.title("2019/2020 kNN Regression")
+    k = 8
 
-    plt.plot(Xtest, ypred, color='darkorange')
-    plt.xlabel("Days")
-    plt.ylabel("Averages")
-    plt.legend(["predict", "train"])
-    plt.show()
+    model = KNeighborsRegressor(n_neighbors=k, weights='uniform').fit(Xtrain, ytrain)  # ANything on or above is weekday
+    ypred = model.predict(Xtest)
+    plt.plot(Xtest, ypred, color="darkgreen")
+    legendlist.append("2019 k= " + str(k))
 
     #### 2020 ####
+
     X2, y2 = days2, averages2
-    print(len(days2), len(averages2))
-    plt.title("2020 kNN Regression")
+ 
+
     plt.scatter(X2, y2, marker=".")
+    k = 9
 
+    model = KNeighborsRegressor(n_neighbors=k, weights='uniform').fit(X2, y2)  # ANything on or above is weekday
+    ypred = model.predict(Xtest)
     plt.plot(Xtest, ypred, color='darkorange')
-    plt.xlabel("Days")
-    plt.ylabel("Averages")
-    plt.legend(["predict", "train"])
-    plt.show()
-
-
-
-gamArray = [0,0.0001,0.001,0.01,0.1]#,5,10,25]
-def kernelizedKNN(Xtrain, ytrain):
-    global gamma
-    Xtest = Xtrain
-    legendlist = []
-    plt.title("2019 kNN Kernelized Regression")
-    plt.scatter(Xtrain, ytrain, marker=".")
-    for gam in gamArray:
-        gamma = gam
-        model = KNeighborsRegressor(n_neighbors=len(Xtrain), weights=gaussian_kernel).fit(Xtrain, ytrain)  # ANything on or above is weekday
-        ypred = model.predict(Xtest)
-        plt.plot(Xtest, ypred)
-        legendlist.append("k=7, gamma = " + str(gam))
+    legendlist.append("2020 k= " + str(k))
 
     plt.xlabel("Days")
     plt.ylabel("Averages")
     legendlist.append("train")
     plt.legend(loc='upper right')
-    plt.legend(legendlist,prop={"size":10})
+    plt.legend(legendlist, prop={"size": 10})
     plt.show()
 
-    #### 2020 ####
-    X2, y2 = days2, averages2
-    plt.title("2020 kNN Kernelized Regression")
-    plt.scatter(X2, y2, marker=".")
+
+
+gamArray = [0.0001]#,5,10,25]
+def kernelizedKNN(Xtrain, ytrain):
+    global gamma
+    Xtest = Xtrain
+    legendlist = []
+
     for gam in gamArray:
         gamma = gam
         model = KNeighborsRegressor(n_neighbors=len(Xtrain), weights=gaussian_kernel).fit(Xtrain, ytrain)  # ANything on or above is weekday
         ypred = model.predict(Xtest)
-        plt.plot(Xtest, ypred)
-        legendlist.append("k=7, gamma = " + str(gam))
+        plt.plot(Xtest, ypred, color="darkgreen")
+        legendlist.append("2019 gamma = " + str(gam))
+
+
+
+    #### 2020 ####
+    X2, y2 = days2, averages2
+    plt.title("2019/2020 kNNKernRegr Gam=0.0001")
+    plt.scatter(X2, y2, marker=".")
+    for gam in gamArray:
+        gamma = gam
+        model = KNeighborsRegressor(n_neighbors=len(X2), weights=gaussian_kernel).fit(X2, y2)  # ANything on or above is weekday
+        ypred = model.predict(Xtest)
+        plt.plot(Xtest, ypred, color="darkorange")
+        legendlist.append("2020 gamma = " + str(gam))
 
     plt.xlabel("Days")
     plt.ylabel("Averages")
@@ -320,9 +319,9 @@ def cross_validation(X, y, c_list, poly, algorithm):
             model = linear_model.Lasso(alpha=a)
         elif (algorithm == "Ridge"):
             model = Ridge(alpha=a)
-        elif (algorithm == "KNN"):
-            model = KNeighborsRegressor(n_neighbors=7, weights='uniform')
-        elif (algorithm == "kNNkern"): model = KNeighborsRegressor(n_neighbors=C, weights=gaussian_kernel)
+        elif (algorithm == "kNN"):
+            model = KNeighborsRegressor(n_neighbors=C, weights='uniform')
+        elif (algorithm == "kNNkern"): model = KNeighborsRegressor(n_neighbors=16)
         else:
             model = DummyRegressor(strategy="constant", constant=0.5)
 
@@ -339,10 +338,10 @@ def cross_validation(X, y, c_list, poly, algorithm):
             ################################# kNN EVALUATION ################################
 
             from sklearn.model_selection import GridSearchCV
-            gaussian_kernelCV = [gaussian_kernel0, gaussian_kernel0001, gaussian_kernel001, gaussian_kernel01,
+            gaussian_kernelCV = [ gaussian_kernel0001, gaussian_kernel001, gaussian_kernel01,
                                  gaussian_kernel1]
             gamArrayDict = dict(weights=gaussian_kernelCV);
-            clf = GridSearchCV(model, gamArrayDict, cv=5)
+            clf = GridSearchCV(model, gamArrayDict, cv=4)
             best_model = clf.fit(X, y)
             print("Best gamma: ",
                   best_model.best_estimator_.get_params()['weights'])  # Gives best gamma - hyper param tuning
@@ -355,7 +354,10 @@ def cross_validation(X, y, c_list, poly, algorithm):
         print("Accuracy: %0.2f (+/- %0.2f)" % (scores.mean(), scores.std()))
 
     plt.errorbar(C_range, mean_error, yerr=std_error)
-    plt.xlabel('C')
+    if(algorithm == "kNN" or algorithm == "kNNkern"):
+        plt.xlabel('K')
+    else:
+        plt.xlabel('C')
     plt.ylabel('Mean square error')
     plt.title(f'{algorithm} Regression 5-fold')
     plt.show()
@@ -450,18 +452,16 @@ weekEnds = np.array(list(range(0, numWeekEnds))).reshape(-1, 1)
 plotHourlyTraffic(hoursGroupedByDay[NOV:DEC], "November")
 
 # set timeline for below regressions
-start, end = getWeekDayCountBetweenMonths(1, 12)
-X = weekDays[start:end]
-y = weekDayAverages[start:end]
+X = days
+y = averages
 #X, y = normalize(X, y)
 c_list = [0.1, 1, 50, 100, 500]
-k_list = [1,2,3,4,5,6,7,8,9,10]
+k_list = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18]
+
 Xnorm, ynorm = normalize(X, y)
 cross_validation(Xnorm, ynorm, k_list, 2, "kNN")
-
-
 cross_validation(Xnorm, ynorm, k_list, 2, "kNNkern")
-kNN(X, y)
+kNN(X, y, k_list)
 kernelizedKNN(X,y)
 
 #kNN regression analysis
@@ -471,9 +471,10 @@ y = weekDayAverages[start:end]
 Xnorm, ynorm = normalize(X, y)
 cross_validation(Xnorm, ynorm, k_list, 2, "kNN")
 cross_validation(Xnorm, ynorm, k_list, 2, "kNNkern")
-kNN(X, y)
+kNN(X, y, k_list)
 kernelizedKNN(X, y)
 
+"""
 #kNN regression analysis
 start, end = getWeekEndCountBetweenMonths(1, 12)
 X = weekEnds[start:end]
@@ -483,8 +484,9 @@ cross_validation(Xnorm, ynorm, k_list, 2, "kNN")
 
 
 cross_validation(Xnorm, ynorm, k_list, 2, "kNNkern")
-kNN(X, y)
+kNN(X, y, k_list)
 kernelizedKNN(X, y)
+"""
 X, y = normalize(X, y)
 # lasso regression analysis
 cross_validation(X, y, c_list, 1, "Lasso")
@@ -495,8 +497,8 @@ cross_validation(X, y, c_list, 1, "Ridge")
 ridgeRegression(X, y, c_list, 1, "Weekdays")
 
 # kNN regression analysis
-cross_validation(X, y, k_list, 2, "KNN")
-kNN(X, y)
+cross_validation(X, y, k_list, 2, "kNN")
+kNN(X, y, k_list)
 
 # dummy regression analysis
 dummy_regressor(X, y)
