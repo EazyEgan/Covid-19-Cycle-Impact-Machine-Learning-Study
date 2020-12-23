@@ -225,30 +225,35 @@ def kNN(Xtrain, ytrain):
     plt.rc('font', size=18)
     plt.rcParams['figure.constrained_layout.use'] = True
     #### 2019 ####
+    plt.title("2019 kNN Regression")
     plt.scatter(Xtrain, ytrain, marker=".")
 
     plt.plot(Xtest, ypred, color='darkorange')
-    plt.xlabel("input x")
-    plt.ylabel("output y")
+    plt.xlabel("Days")
+    plt.ylabel("Averages")
     plt.legend(["predict", "train"])
     plt.show()
 
     #### 2020 ####
-    X2, y2 = days2, peaks2
+    X2, y2 = days2, averages2
+    print(len(days2), len(averages2))
+    plt.title("2020 kNN Regression")
     plt.scatter(X2, y2, marker=".")
 
     plt.plot(Xtest, ypred, color='darkorange')
-    plt.xlabel("input x")
-    plt.ylabel("output y")
+    plt.xlabel("Days")
+    plt.ylabel("Averages")
     plt.legend(["predict", "train"])
     plt.show()
+
+
 
 gamArray = [0,0.0001,0.001,0.01,0.1]#,5,10,25]
 def kernelizedKNN(Xtrain, ytrain):
     global gamma
     Xtest = Xtrain
     legendlist = []
-    plt.title("2019 kNN Regression")
+    plt.title("2019 kNN Kernelized Regression")
     plt.scatter(Xtrain, ytrain, marker=".")
     for gam in gamArray:
         gamma = gam
@@ -266,7 +271,7 @@ def kernelizedKNN(Xtrain, ytrain):
 
     #### 2020 ####
     X2, y2 = days2, averages2
-    plt.title("2020 kNN Regression")
+    plt.title("2020 kNN Kernelized Regression")
     plt.scatter(X2, y2, marker=".")
     for gam in gamArray:
         gamma = gam
