@@ -23,7 +23,7 @@ JUL = 182
 AUG = 213
 SEP = 244
 OCT = 274
-NOV = 305
+END = 305
 
 #
 DAY_OFFSET = 2
@@ -119,7 +119,7 @@ def plotDayData(X, y, title, dataType, xlabel):
     plt.xlabel(xlabel)
     plt.ylabel("Cyclists")
     plt.legend([f'Daily {dataType}'], loc=1)
-    plt.title(f"{title} Cycle Volume 2019")
+    plt.title(f"{title} Cycle Volume 2020")
     plt.show()
 
 
@@ -129,130 +129,102 @@ def plotHourlyTraffic(y, title):
     plt.xlabel("Hour")
     plt.ylabel("Cyclists")
     plt.legend(['Total'])
-    plt.title(f"{title} cycle volume 2019")
+    plt.title(f"{title} cycle volume 2020")
     plt.show()
 
 
 ################################## LASSO REGRESSION #################################
 
 
-def lassoRegression(X, y, c, poly):
-    C = c
+def lassoRegressionC(X, y, Xtest, c_list, P, xlabel):
 
-    poly = PolynomialFeatures(poly)
+    poly = PolynomialFeatures(P)
     polyX = poly.fit_transform(X)
 
-    a = 1 / (2 * C)
-    model = linear_model.Lasso(alpha=a)
-    model.fit(polyX, y)
-    yPred = model.predict(polyX)
+    for C in c_list:
 
-    plt.scatter(X, y, color="blue")
-    plt.plot(X, yPred, color="red")
-    plt.xlabel("Days")
+        a = 1 / (2 * C)
+        model = linear_model.Lasso(alpha=a)
+        model.fit(polyX, y)
+        yPred = model.predict(poly.fit_transform(Xtest)) #train on extend x-axis
+
+        plt.plot(Xtest, yPred, label=f"C:{C}")
+    plt.scatter(X, y, marker=".")
+    plt.xlabel(xlabel)
+    plt.legend(loc="lower left", prop={'size': 14})
     plt.ylabel("Cyclists")
-    plt.title("lasso Regression 2019")
+    plt.ylim(-0.05, 1.05)
+    plt.title(f"Lasso Regression 2020 - P: {P}")
+    plt.show()
+
+def lassoRegressionP(X, y, Xtest, C, p_list, xlabel):
+
+    for P in p_list:
+        poly = PolynomialFeatures(P)
+        polyX = poly.fit_transform(X)
+
+        a = 1 / (2 * C)
+        model = linear_model.Lasso(alpha=a)
+        model.fit(polyX, y)
+        yPred = model.predict(poly.fit_transform(Xtest)) #train on extend x-axis
+
+        plt.plot(Xtest, yPred, label=f"P:{P}")
+    plt.scatter(X, y, marker=".")
+    plt.xlabel(xlabel)
+    plt.legend()
+    plt.ylabel("Cyclists")
+    plt.ylim(-0.05, 1.05)
+    plt.title(f"Lasso Regression 2020 - C: {C}")
     plt.show()
 
 
 ################################## RIDGE REGRESSION #################################
 
-def ridgeRegression(X, y, c, poly):
-    C = c
-
-    poly = PolynomialFeatures(poly)
+def ridgeRegressionC(X, y, Xtest, c_list, P, xlabel):
+    
+    poly = PolynomialFeatures(P)
     polyX = poly.fit_transform(X)
 
-    a = 1 / (2 * C)
-    model = Ridge(alpha=a)
-    model.fit(polyX, y)
-    yPred = model.predict(polyX)
+    for C in c_list:
 
-    plt.scatter(X, y, color="blue")
-    plt.plot(X, yPred, color="red")
-    plt.xlabel("Days")
+        a = 1 / (2 * C)
+        model = Ridge(alpha=a)
+        model.fit(polyX, y)
+        yPred = model.predict(poly.fit_transform(Xtest)) #train on extend x-axis
+
+        plt.plot(Xtest, yPred, label=f"C:{C}")
+    plt.scatter(X, y, marker=".")
+    plt.xlabel(xlabel)
     plt.ylabel("Cyclists")
-    plt.title("Ridge Regression 2019")
+    plt.legend()
+    plt.ylim(-0.05, 1.05)
+    plt.title(f"Ridge Regression 2020 - P: {P}")
     plt.show()
 
+def ridgeRegressionP(X, y, Xtest, C, p_list, xlabel):
+
+    for P in p_list:
+
+        poly = PolynomialFeatures(P)
+        polyX = poly.fit_transform(X)
+
+        a = 1 / (2 * C)
+        model = Ridge(alpha=a)
+        model.fit(polyX, y)
+        yPred = model.predict(poly.fit_transform(Xtest)) #train on extend x-axis
+
+        plt.plot(Xtest, yPred, label=f"P:{P}")
+    plt.scatter(X, y, marker=".")
+    plt.xlabel(xlabel)
+    plt.ylabel("Cyclists")
+    plt.legend()
+    plt.ylim(-0.05, 1.05)
+    plt.title(f"Ridge Regression 2020- C: {C}")
+    plt.show()
 
 ############################ KNN REGRESSION ####################################
 # CURRENTLY OVERFIT - HAVE TO CHANGE NEIGHBOURS
-"""
-from sklearn import datasets
-from sklearn.model_selection import train_test_split
 
-from sklearn.preprocessing import StandardScaler
-from sklearn.neighbors import KNeighborsClassifier
-
-import numpy as np
-import matplotlib.pyplot as plt
-from matplotlib.colors import ListedColormap
-
-def plot_decision_regions(X, y, classifier, test_idx=None, resolution=0.02):
-   # setup marker generator and color map
-   markers = ('s', 'x', 'o', '^', 'v')
-   colors = ('red', 'blue', 'lightgreen', 'gray', 'cyan')
-   cmap = ListedColormap(colors[:len(np.unique(y))])
-
-   # plot the decision surface
-   x1_min, x1_max = X[:, 0].min() - 1, X[:, 0].max() + 1
-   x2_min, x2_max = X[:, 1].min() - 1, X[:, 1].max() + 1
-   xx1, xx2 = np.meshgrid(np.arange(x1_min, x1_max, resolution),
-   np.arange(x2_min, x2_max, resolution))
-   Z = classifier.predict(np.array([xx1.ravel(), xx2.ravel()]).T)
-   Z = Z.reshape(xx1.shape)
-   plt.contourf(xx1, xx2, Z, alpha=0.4, cmap=cmap)
-   plt.xlim(xx1.min(), xx1.max())
-   plt.ylim(xx2.min(), xx2.max())
-
-   # plot all samples
-   X_test, y_test = X[test_idx, :], y[test_idx]
-   for idx, cl in enumerate(np.unique(y)):
-      plt.scatter(x=X[y == cl, 0], y=X[y == cl, 1],
-               alpha=0.8, c=cmap(idx),
-               marker=markers[idx], label=cl)
-   # highlight test samples
-   if test_idx:
-      X_test, y_test = X[test_idx, :], y[test_idx]
-      plt.scatter(X_test[:, 0], X_test[:, 1], c='',
-               alpha=1.0, linewidth=1, marker='o',
-               s=55, label='test set')
-
-
-start, end = getWeekDayCountBetweenMonths(1, 12)
-X = days[start:end]
-y = peaks[start:end]
-X, y = normalize(X, y)
-
-X_train = X
-X_test = X
-y_train= y
-y_test = y
-
-sc = StandardScaler()
-X_train_std = sc.fit_transform(X_train)
-X_test_std = sc.fit_transform(X_test)
-
-X_combined_std = np.vstack((X_train_std, X_test_std))
-print(len(X_train_std), len(X_test_std))
-print(len(y_train), len(y_test))
-y_combined = np.hstack((y_train, y_test))
-
-knn = KNeighborsClassifier(n_neighbors=5, p=2,
-                           metric='minkowski')
-import pandas as pd
-y_resampled = pd.DataFrame(y_train)
-knn.fit(X_train_std, y_resampled.values.ravel())
-
-plot_decision_regions(X_combined_std, y_combined,
-                      classifier=knn, test_idx=range(105,150))
-
-plt.xlabel('petal length [cm]')
-plt.ylabel('petal width [cm]')
-plt.legend(loc='upper left')
-plt.show()
-"""
 def gaussian_kernel100(distances):
     weights = np.exp(-100 * (distances ** 2))
     return weights / np.sum(weights)
@@ -266,31 +238,6 @@ def gaussian_kernel10000(distances):
     return weights / np.sum(weights)
 
 def kNN(Xtrain, ytrain):
-    """
-    model = KNeighborsClassifier(n_neighbors=7, weights='uniform').fit(Xtrain, ytrain)
-    ypred = model.predict(Xtrain)
-    plt.scatter(Xtrain, ytrain, color='red', marker ='+')
-    plt.plot(Xtrain, ypred, color='green')
-    plt.xlabel("inputx")
-    plt.ylabel("outputy")
-    plt.legend(["predict", "train"])
-    plt.show()
-    
-    ############################### KNN CLASSIFIER #################################
-    
-    from sklearn.neighbors import KNeighborsClassifier
-    model = KNeighborsClassifier(n_neighbors=5,weights='uniform').fit(Xtrain, ytrain)
-    Xtest = Xtrain
-    ypred = model.predict(Xtrain)
-    import matplotlib.pyplot as plt
-    plt.rc('font', size=18); plt.rcParams['figure.constrained_layout.use'] = True
-    plt.scatter(Xtrain, ytrain, color='red', marker='+')
-    plt.plot(Xtest, ypred, color='green')
-    plt.xlabel("input x"); plt.ylabel("output y")
-    plt.legend(["predict","train"])
-    plt.show()
-    """
-
     Xtest = Xtrain #xtest
 
 
@@ -301,43 +248,14 @@ def kNN(Xtrain, ytrain):
     plt.rc('font', size=18)
     plt.rcParams['figure.constrained_layout.use'] = True
 #### 2019 ####
-    plt.scatter(Xtrain,ytrain, color='red', marker='+')
+    plt.scatter(Xtrain,ytrain, marker="." )
 
-    plt.plot(Xtest, ypred, color='green')
+    plt.plot(Xtest, ypred, color='darkorange')
     plt.xlabel("input x")
     plt.ylabel("output y")
     plt.legend(["predict", "train"])
     plt.show()
 
-    '''
-
-##### WEEKENDS ##### MODEL MUST BE TRAINED ON WEEKEND DATA THAT HASNT BEEN EXTRACTED FROM THE DATASET BECAUSE IT TREATS THEM AS BEING SEQUENTIAL
-    #OR MAYBE WE CAN JUST STRETCH IT OUT BECAUSE IT MIGHT BE THE SAME? NOT ENTIRELY SURE PLUS IT'S 5:11 AM AND I HAVE BEEN AWAKE FAR TOO LONG
-    
-    start, end = getWeekEndCountBetweenMonths(1, 12)
-    X = weekEnds[start:end]
-    y = weekEndPeaks[start:end]
-    #X, y = normalize(days2, peaks2)
-    model = KNeighborsRegressor(n_neighbors=7, weights='uniform').fit(X, y)  # ANything on or above is weekday
-    ypred = model.predict(X)
-    #### 2019 ####
-    plt.scatter(Xtrain, ytrain, color='red', marker='+')
-
-    plt.plot(X, ypred, color='green')
-    plt.xlabel("input x")
-    plt.ylabel("output y")
-    plt.legend(["predict", "train"])
-    plt.show()
-
-    #### 2020 ####
-    plt.scatter(X2, y2, color='red', marker='+')
-
-    plt.plot(X, ypred, color='green')
-    plt.xlabel("input x")
-    plt.ylabel("output y")
-    plt.legend(["predict", "train"])
-    plt.show()
-    '''
 def kernelizedKNN(Xtrain, ytrain):
     Xtest = Xtrain
 
@@ -350,9 +268,9 @@ def kernelizedKNN(Xtrain, ytrain):
     model4 = KNeighborsRegressor(n_neighbors=7, weights=gaussian_kernel10000).fit(Xtrain, ytrain)
     ypred4 = model4.predict(Xtest)
 
-    plt.scatter(Xtrain, ytrain, color='red', marker='+')
-    plt.plot(Xtest, ypred2, color='blue')
-    plt.plot(Xtest, ypred3, color='orange')
+    plt.scatter(Xtrain, ytrain, marker=".")
+    plt.plot(Xtest, ypred2, color='purple')
+    plt.plot(Xtest, ypred3, color='darkorange')
     plt.plot(Xtest, ypred4, color='green')
     plt.xlabel("input x")
     plt.ylabel("output y")
@@ -367,34 +285,32 @@ def dummy_regressor(X, y):
     yPred = model.predict(X)
     print(model.score(X, y))
 
-    plt.scatter(X, y, color="blue")
-    plt.plot(X, yPred, color="red")
+    plt.scatter(X, y, marker=".")
+    plt.plot(X, yPred, color="darkorange")
     plt.xlabel("Days")
     plt.ylabel("Cyclists")
-    plt.title("Dummy Regression 2019")
+    plt.title("Dummy Regression 2020")
     plt.show()
 
 
 ############################### EVALUATION #####################################
 
-def cross_validation(X, y, poly, model):
+def cross_validation_C(X, y, c_list, poly, algorithm):
     mean_error = []
     std_error = []
     f = 5
-    C_range = [0.001, 0.01, 1, 100, 1000]
 
     poly = PolynomialFeatures(poly)
     polyX = poly.fit_transform(X)
 
-    for C in C_range:
+    for C in c_list:
         a = 1 / (2 * C)
 
-        if(model == "lasso"): model = linear_model.Lasso(alpha=a)
-        elif(model == "ridge"): model = Ridge(alpha=a)
-        elif(model == "kNN"): model =  KNeighborsRegressor(n_neighbors=7, weights='uniform')
+        if(algorithm == "Lasso"): model = linear_model.Lasso(alpha=a)
+        elif(algorithm == "Ridge"): model = Ridge(alpha=a)
+        elif(algorithm == "KNN"): model =  KNeighborsRegressor(n_neighbors=7, weights='uniform')
         else: model = DummyRegressor(strategy="constant", constant=0.5)
 
-        model = linear_model.Lasso(alpha=a)
         temp = []
 
         kf = KFold(n_splits=f)
@@ -410,17 +326,52 @@ def cross_validation(X, y, poly, model):
         print(scores)
         print("Accuracy: %0.2f (+/- %0.2f)" % (scores.mean(), scores.std()))
 
-    plt.errorbar(C_range, mean_error, yerr=std_error)
+    plt.errorbar(c_list, mean_error, yerr=std_error)
     plt.xlabel('C')
     plt.ylabel('Mean square error')
-    plt.title('Lasso Regression 5-fold')
+    plt.title(f'{algorithm} Regression 5-fold')
     plt.show()
 
+def cross_validation_P(X, y, c, p_list, algorithm):
+    mean_error = []
+    std_error = []
+    f = 5
+
+    for P in p_list:
+        a = 1 / (2 * c)
+        poly = PolynomialFeatures(P)
+        polyX = poly.fit_transform(X)
+
+        if(algorithm == "Lasso"): model = linear_model.Lasso(alpha=a)
+        elif(algorithm == "Ridge"): model = Ridge(alpha=a)
+        elif(algorithm == "KNN"): model =  KNeighborsRegressor(n_neighbors=7, weights='uniform')
+        else: model = DummyRegressor(strategy="constant", constant=0.5)
+
+        temp = []
+
+        kf = KFold(n_splits=f)
+        for train, test in kf.split(polyX):
+            model.fit(polyX[train], y[train])
+            ypred = model.predict(polyX[test])
+            # print("intercept ", model.intercept_, "slope ", model.coef_, " square error ", mean_squared_error(polyX[test], ypred))
+            temp.append(mean_squared_error(y[test], ypred))
+        mean_error.append(np.array(temp).mean())
+        std_error.append(np.array(temp).std())
+
+        scores = cross_val_score(model, polyX, y, cv=5, scoring='neg_mean_squared_error')
+        print(scores)
+        print("Accuracy: %0.2f (+/- %0.2f)" % (scores.mean(), scores.std()))
+
+    plt.errorbar(p_list, mean_error, yerr=std_error)
+    plt.xlabel('Polynomial')
+    plt.ylabel('Mean square error')
+    plt.title(f'{algorithm} Regression 5-fold')
+    plt.show()
 
 ################################# SET UP ########################################
 
+#2020#
 # ---------------data cleaning notes-----------------
-# 2139 missing row from excel file
 # NaN rows (3026-3039) filled in with zeros
 
 df = pd.read_csv("jan-oct-2020-cycle-data.csv", comment='#')
@@ -456,12 +407,15 @@ for i in range(0, len(hours)):
 
 
 ################################ main sequence ###################################
+
 #plotting dataset - all days v weekdays v weekends
 weekDayPeaks, weekEndPeaks = getWeekDaysAndWeekEndsFromList(peaks)
+weekDayAverages, weekEndAverages = getWeekDaysAndWeekEndsFromList(averages)
 
-plotDayData(days[JAN:NOV], peaks[JAN:NOV], "", "Peaks", "All Days")
-plotDayData(days[JAN:NOV], weekDayPeaks[JAN:NOV], "", "Peaks", "Week Days" )
-plotDayData(days[JAN:NOV], weekEndPeaks[JAN:NOV], "", "Peaks", "Weekends")
+#plotDayData(days[JAN:END], peaks[JAN:END], "", "Peaks", "All Days")
+#plotDayData(days[JAN:END], weekDayAverages[JAN:END], "", "Averages", "Week Days" )
+#plotDayData(days[JAN:END], weekEndPeaks[JAN:END], "", "Peaks", "Weekends")
+
 
 #overwriting above, beginning regression
 weekDayPeaks, weekEndPeaks = splitWeekDays(peaks)
@@ -476,32 +430,38 @@ weekDays = np.array(list(range(0, numWeekDays))).reshape(-1, 1)
 weekEnds = np.array(list(range(0, numWeekEnds))).reshape(-1, 1)
 
 #hourly traffic
-plotHourlyTraffic(hoursGroupedByDay[JAN:FEB], "November")
+#plotHourlyTraffic(hoursGroupedByDay[JAN:FEB], "November")
 
 #set timeline for below regressions
-start, end = getWeekDayCountBetweenMonths(1, 12)
+start, end = getWeekDayCountBetweenMonths(1, 10)
 X = weekDays[start:end]
-y = weekDayPeaks[start:end]
+y = weekDayAverages[start:end]
 X, y = normalize(X, y)
+c_list = [1, 50, 100, 200, 400, 800]
+p_list = [1, 2, 3, 4, 5]
+polynomial = 3
+C = 500
+limit = (1/305)*(366 + 90)         #predict first three months of 2021
+Xtest=np.linspace(0,limit).reshape(-1, 1)
 
 #lasso regression analysis
-cross_validation(X, y, 2, "lasso")
-lassoRegression(X, y, 0.0001, 4)
-lassoRegression(X, y, 0.1, 4)
-lassoRegression(X, y, 1000, 4)
+cross_validation_C(X, y, c_list, polynomial, "Lasso")
+lassoRegressionC(X, y, Xtest, c_list, polynomial, "Weekdays")
+cross_validation_P(X, y, C, p_list, "Lasso")
+lassoRegressionP(X, y, Xtest, C, p_list, "Weekdays")
 
 #ridge regression analysis
-cross_validation(X, y, 2, "ridge")
-ridgeRegression(X, y, 0.0001, 4)
-ridgeRegression(X, y, 0.1, 4)
-ridgeRegression(X, y, 1000, 4)
+cross_validation_P(X, y, C, p_list, "Ridge")
+ridgeRegressionP(X, y, Xtest, C, p_list, "Weekdays")
+cross_validation_C(X, y, c_list, polynomial, "Ridge")
+ridgeRegressionC(X, y, Xtest, c_list, polynomial, "Weekdays")
 
 #kNN regression analysis
-cross_validation(X, y, 2, "kNN")
+cross_validation_C(X, y, c_list, polynomial, "KNN")
 kNN(X, y)
 
 #Kernalised kNN regression analysis
-cross_validation(X, y, 2, "kNN")
+cross_validation_C(X, y, c_list, 2, "Kernelized KNN")
 kernelizedKNN(X, y)
 
 #dummy regression analysis
