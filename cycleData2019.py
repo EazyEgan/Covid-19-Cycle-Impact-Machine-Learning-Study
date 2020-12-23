@@ -480,7 +480,7 @@ cross_validation(Xnorm, ynorm, k_list, 2, "kNN")
 cross_validation(Xnorm, ynorm, k_list, 2, "kNNkern")
 kNN(X, y)
 kernelizedKNN(X, y)
-
+X, y = normalize(X, y)
 # lasso regression analysis
 cross_validation(X, y, c_list, 1, "Lasso")
 lassoRegression(X, y, c_list, 1, "Weekdays")
