@@ -571,13 +571,6 @@ ridgeRegressionP(X, y, Xtest, C, p_list, "Weekdays")
 cross_validation_C(X, y, c_list, polynomial, "Ridge")
 ridgeRegressionC(X, y, Xtest, c_list, polynomial, "Weekdays")
 
-#kNN regression analysis
-cross_validation_C(X, y, c_list, polynomial, "KNN")
-kNN(X, y)
-
-#Kernalised kNN regression analysis
-cross_validation_C(X, y, c_list, 2, "Kernelized KNN")
-kernelizedKNN(X, y)
 
 #dummy regression analysis
 dummy_regressor(X, y)
