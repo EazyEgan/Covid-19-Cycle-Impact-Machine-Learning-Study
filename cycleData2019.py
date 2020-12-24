@@ -27,16 +27,7 @@ NOV = 304
 DEC = 334
 END = 365
 
-#
 DAY_OFFSET = 2
-MON = 1
-TUE = 2
-WED = 3
-THUR = 4
-FRI = 5
-SAT = 6
-SUN = 7
-
 
 ################################ TIMELINE FUNCTIONS #####################################
 
@@ -180,7 +171,7 @@ def ridgeRegression(X, y, c_list, poly, xlabel):
 
 ############################ KNN REGRESSION ####################################
 # CURRENTLY OVERFIT - HAVE TO CHANGE NEIGHBOURS
-gamIndex=0;
+gamIndex=0
 gamma=0
 
 gamArray = [0.0001,0.001,0.01,0.1]#,5,10,25]
@@ -443,13 +434,12 @@ for i in range(0, numDays2):
 
 averages2 = np.array(averages2).reshape(-1, 1)
 ################################ main sequence ###################################
-'''
+
 #plotting dataset - all days v weekdays v weekends
 weekDayPeaks, weekEndPeaks = getWeekDaysAndWeekEndsFromList(peaks)
 plotDayData(days[JAN:END], peaks[JAN:END], "", "Peaks", "All Days")
 plotDayData(days[JAN:END], weekDayPeaks[JAN:END], "", "Peaks", "Week Days" )
 plotDayData(days[JAN:END], weekEndPeaks[JAN:END], "", "Peaks", "Weekends")
-'''
 
 # overwriting above, beginning regression
 weekDayPeaks, weekEndPeaks = splitWeekDays(peaks)
@@ -467,10 +457,23 @@ weekEnds = np.array(list(range(0, numWeekEnds))).reshape(-1, 1)
 plotHourlyTraffic(hoursGroupedByDay[NOV:DEC], "November")
 
 # set timeline for below regressions
+X = weekDays
+y = weekDayAverages
+polynomial = 1
+c_list = [0.1, 1, 50, 100, 500]
+
+#lasso regression analysis
+cross_validation(X, y, c_list, polynomial, "Lasso")
+lassoRegression(X, y, c_list, polynomial, "Weekdays")
+
+#ridge regression analysis
+cross_validation(X, y, c_list, polynomial, "Ridge")
+ridgeRegression(X, y, c_list, polynomial, "Weekdays")
+
 X = days
 y = averages
+
 #X, y = normalize(X, y)
-c_list = [0.1, 1, 50, 100, 500]
 k_list = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18]
 
 Xnorm, ynorm = normalize(X, y)
@@ -489,7 +492,7 @@ cross_validation(Xnorm, ynorm, k_list, 2, "kNNkern")
 kNN(X, y, k_list)
 kernelizedKNN(X, y)
 
-"""
+
 #kNN regression analysis
 start, end = getWeekEndCountBetweenMonths(1, 12)
 X = weekEnds[start:end]
@@ -501,22 +504,7 @@ cross_validation(Xnorm, ynorm, k_list, 2, "kNN")
 cross_validation(Xnorm, ynorm, k_list, 2, "kNNkern")
 kNN(X, y, k_list)
 kernelizedKNN(X, y)
-"""
-X, y = normalize(X, y)
-# lasso regression analysis
-cross_validation(X, y, c_list, 1, "Lasso")
-lassoRegression(X, y, c_list, 1, "Weekdays")
 
-# ridge regression analysis
-cross_validation(X, y, c_list, 1, "Ridge")
-ridgeRegression(X, y, c_list, 1, "Weekdays")
-
-# kNN regression analysis
-cross_validation(X, y, k_list, 2, "kNN")
-kNN(X, y, k_list)
-
-# dummy regression analysis
-dummy_regressor(X, y)
 
 ############################# COMPARISON ####################################
 
@@ -533,26 +521,3 @@ plt.xlabel("days")
 plt.ylabel("Cyclists")
 plt.title("lasso Regression 2019")
 plt.show()
-
-'''
-#Test data augmentation
-""" 
-Xtest = []
-grid = np.linspace(-3, 3)
-for i in grid:
-    Xtest.append([i])
-Xtest = np.array(Xtest)
-"""
-X = days 
-y = peaks 
-#X, y = normalize(X, y)
-start, end = getWeekEndCountBetweenMonths(1, 12)
-Xwknd = weekEnds[start:end]
-ywknd = weekEndPeaks[start:end]
-#X2, y2 = normalize(X2, y2)
-lassoRegression(X, y, 0.0001, 2)
-ridgeRegression(X, y, 0.0001, 2)
-kNN(X, y)
-dummy_regressor(X, y)
-cross_validation(X, y, 2, "lasso")
-'''

@@ -25,16 +25,7 @@ SEP = 244
 OCT = 274
 END = 305
 
-#
 DAY_OFFSET = 2
-MON = 1
-TUE = 2
-WED = 3
-THUR = 4
-FRI = 5
-SAT = 6
-SUN = 7
-
 
 ################################ TIMELINE FUNCTIONS #####################################
 
@@ -496,10 +487,9 @@ for i in range(0, len(hours)):
 weekDayPeaks, weekEndPeaks = getWeekDaysAndWeekEndsFromList(peaks)
 weekDayAverages, weekEndAverages = getWeekDaysAndWeekEndsFromList(averages)
 
-#plotDayData(days[JAN:END], peaks[JAN:END], "", "Peaks", "All Days")
-#plotDayData(days[JAN:END], weekDayAverages[JAN:END], "", "Averages", "Week Days" )
-#plotDayData(days[JAN:END], weekEndPeaks[JAN:END], "", "Peaks", "Weekends")
-
+plotDayData(days[JAN:END], peaks[JAN:END], "", "Peaks", "All Days")
+plotDayData(days[JAN:END], weekDayAverages[JAN:END], "", "Averages", "Week Days" )
+plotDayData(days[JAN:END], weekEndPeaks[JAN:END], "", "Peaks", "Weekends")
 
 #overwriting above, beginning regression
 weekDayPeaks, weekEndPeaks = splitWeekDays(peaks)
@@ -514,18 +504,17 @@ weekDays = np.array(list(range(0, numWeekDays))).reshape(-1, 1)
 weekEnds = np.array(list(range(0, numWeekEnds))).reshape(-1, 1)
 
 #hourly traffic
-#plotHourlyTraffic(hoursGroupedByDay[JAN:FEB], "November")
+plotHourlyTraffic(hoursGroupedByDay[JAN:FEB], "November")
 
 #set timeline for below regressions
 start, end = getWeekDayCountBetweenMonths(1, 10)
 X = weekDays[start:end]
 y = weekDayAverages[start:end]
-#X, y = normalize(X, y)
 c_list = [1, 50, 100, 200, 400, 800]
 k_list = [1,2,3,4,5,6,7,8,9,10]
+
 Xnorm, ynorm = normalize(X, y)
 cross_validation(Xnorm, ynorm, k_list, 2, "kNN")
-
 
 cross_validation(Xnorm, ynorm, k_list, 2, "kNNkern")
 kNN(X, y)
